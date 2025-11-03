@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="..\Core\Core.Entity\Core.Entity.csproj" Type="Classic C#" />
+    <Project Path="..\Core\Core.Log\Core.Log.csproj" />
+    <Project Path="..\Core\Core.Persistent\Core.Persistent.csproj" />
+  </Folder>
+  <Folder Name="/Example/">
+    <Project Path="..\Example\Example.Entity\Example.Entity.csproj" Type="Classic C#" />
+    <Project Path="..\Example\Example.Service\Example.Service.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Sys/">
+    <Project Path="..\Sys\Entity\Sys.Entity.csproj" Type="Classic C#" />
+    <Project Path="..\Sys\Sys.Service\Sys.Service.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/Utility/">
+    <Project Path="..\Utility\EFGenerateUtility\EFGenerateUtility.csproj" Type="Classic C#" />
+  </Folder>
+  <Project Path="Api.csproj" />
+</Solution>

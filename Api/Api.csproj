@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-rc.2.25502.107" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.Entity\Core.Entity.csproj" />
+    <ProjectReference Include="..\Core\Core.Persistent\Core.Persistent.csproj" />
+    <ProjectReference Include="..\Example\Example.Entity\Example.Entity.csproj" />
+    <ProjectReference Include="..\Example\Example.Service\Example.Service.csproj" />
+    <ProjectReference Include="..\Sys\Entity\Sys.Entity.csproj" />
+    <ProjectReference Include="..\Sys\Sys.Service\Sys.Service.csproj" />
+  </ItemGroup>
+
+</Project>

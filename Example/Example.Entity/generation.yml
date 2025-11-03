@@ -1,0 +1,55 @@
+project:
+  namespace: Example.Entity
+  directory: .\
+  nullable: true
+  fileScopedNamespace: true
+database: {
+  provider: 'MySQL',
+  connectionString: "Server=localhost;Port=3306;Database=testdb;User=root;Password=root;Charset=utf8mb4;SslMode=None;AllowPublicKeyRetrieval=True;"
+}
+data:
+  context:
+    namespace: '{Project.Namespace}.Data'
+    directory: '{Project.Directory}\Data'
+    name: '{Database.Name}Context'
+    baseClass: DbContext
+  entity:
+    namespace: '{Project.Namespace}.Data.Entities'
+    directory: '{Project.Directory}\Data\Entities'
+  mapping:
+    rowVersion: Long
+    namespace: '{Project.Namespace}.Data.Mapping'
+    directory: '{Project.Directory}\Data\Mapping'
+    name: '{Entity.Name}Map'
+  query:
+    generate: true
+    indexPrefix: By
+    uniquePrefix: GetBy
+    namespace: '{Project.Namespace}.Data.Queries'
+    directory: '{Project.Directory}\Data\Queries'
+    name: '{Entity.Name}Extensions'
+model:
+  shared:
+    namespace: '{Project.Namespace}.Domain.Models'
+    directory: '{Project.Directory}\Domain\Models'
+  read:
+    generate: true
+    name: '{Entity.Name}ReadModel'
+  create:
+    generate: true
+    name: '{Entity.Name}CreateModel'
+  update:
+    generate: true
+    name: '{Entity.Name}UpdateModel'
+  mapper:
+    generate: true
+    namespace: '{Project.Namespace}.Domain.Mapping'
+    directory: '{Project.Directory}\Domain\Mapping'
+    name: '{Entity.Name}Profile'
+    baseClass: AutoMapper.Profile
+  validator:
+    generate: true
+    namespace: '{Project.Namespace}.Domain.Validation'
+    directory: '{Project.Directory}\Domain\Validation'
+    name: '{Model.Name}Validator'
+    baseClass: FluentValidation.AbstractValidator<{Model.Name}>
