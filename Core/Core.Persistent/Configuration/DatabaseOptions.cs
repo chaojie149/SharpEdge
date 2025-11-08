@@ -1,4 +1,6 @@
-﻿namespace Core.Persistent.Configuration;
+﻿using System.Collections.Generic;
+
+namespace Core.Persistent.Configuration;
 
 public class DatabaseOptions
 {

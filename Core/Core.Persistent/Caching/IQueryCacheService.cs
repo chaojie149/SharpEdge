@@ -1,4 +1,7 @@
-﻿namespace Core.Persistent.Caching;
+﻿using System;
+using System.Threading.Tasks;
+
+namespace Core.Persistent.Caching;
 
 public interface IQueryCacheService
 {

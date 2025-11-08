@@ -1,6 +1,7 @@
 ﻿using Core.Persistent.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Core.Persistent.Context;
 

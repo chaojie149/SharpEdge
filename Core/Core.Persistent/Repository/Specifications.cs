@@ -1,6 +1,9 @@
 ﻿using Core.Entity.Entities;
 using Core.Persistent.Entities;
 using Core.Persistent.Specifications;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Core.Persistent.Repository;
 

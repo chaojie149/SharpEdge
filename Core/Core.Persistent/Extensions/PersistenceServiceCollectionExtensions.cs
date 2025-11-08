@@ -2,7 +2,6 @@
 using Core.Persistent.Configuration;
 using Core.Persistent.Context;
 using Core.Persistent.Interceptors;
-using Core.Persistent.Register;
 using Core.Persistent.Repository;
 
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using System;
+using System.Collections.Generic;
 
 namespace Core.Persistent.Extensions;
 

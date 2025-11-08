@@ -1,6 +1,9 @@
 ﻿using Core.Entity.Entities;
 using Core.Persistent.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Core.Persistent.Repository;
 

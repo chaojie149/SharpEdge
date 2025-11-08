@@ -1,5 +1,3 @@
-using System.Reflection;
-using Core.Persistent.Configuration;
 using Core.Persistent.Extensions;
 using Example.Entity.Data;
 using Example.Service;
@@ -7,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
+using Service.Jwt;
 using Sys.Entity.Models;
 using Sys.Service;
 
@@ -21,15 +20,17 @@ try
 
     // ✅ 2. 创建 builder
     var builder = WebApplication.CreateBuilder(args);
+// 配置JwtSettings
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
 
     // ✅ 3. 完整配置 Serilog（使用代码配置）
     builder.Host.UseSerilog((context, services, configuration) =>
     {
         configuration
             .MinimumLevel.Information()
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information)
-            .MinimumLevel.Override("System", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .Enrich.WithMachineName()
             .Enrich.WithThreadId()
@@ -40,10 +41,18 @@ try
             
             // // EF Core 日志
             .WriteTo.Logger(lc => lc
-                .Filter.ByIncludingOnly(Matching.FromSource("Microsoft.EntityFrameworkCore"))
+                .Filter.ByIncludingOnly(Matching.FromSource("Microsoft.EntityFrameworkCore.Database.Command"))
                 .WriteTo.File(
                     path: "Logs/efcore-.log",
                     rollingInterval: RollingInterval.Day,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"))
+            
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Error || e.Level == LogEventLevel.Fatal)
+                .WriteTo.File(
+                    path: "Logs/err-.log",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 14,
                     outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"))
             //
             // // Login 相关日志
@@ -86,7 +95,7 @@ try
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}");
     });
 
-    // 4️⃣ 注册服务
+
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
@@ -96,14 +105,16 @@ try
         services.AddDbContext<SysDbContext>((serviceProvider, options) =>
         {
             PersistenceServiceCollectionExtensions.ConfigureDbContext(options, databaseOptions, "Default", serviceProvider);
+            options.EnableSensitiveDataLogging(); // 开发环境用，生产慎用
+            options.EnableDetailedErrors();
         });
-        
-        // 这里注册 TestdbContext
-        services.AddDbContext<TestdbContext>((serviceProvider, options) =>
-        {
-            PersistenceServiceCollectionExtensions.ConfigureDbContext(options, databaseOptions, "Sys", serviceProvider);
-        });
-        services.AddScoped<DbContext, TestdbContext>();
+        //
+        // // 这里注册 TestdbContext
+        // services.AddDbContext<TestdbContext>((serviceProvider, options) =>
+        // {
+        //     PersistenceServiceCollectionExtensions.ConfigureDbContext(options, databaseOptions, "Sys", serviceProvider);
+        // });
+        // services.AddScoped<DbContext, TestdbContext>();
 
         return services;
     });
@@ -112,22 +123,17 @@ try
     builder.Services.AddScoped<ExampleService>();
     builder.Services.AddEndpointsApiExplorer();
 
-    // 5️⃣ 构建应用
     var app = builder.Build();
 
-    // 6️⃣ 中间件
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
     }
-
+    app.UseSerilogRequestLogging();
     app.UseAuthorization();
     app.MapControllers();
     
-    // ✅ 添加 Serilog 请求日志（放在 UseAuthorization 之后）
-    app.UseSerilogRequestLogging();
 
-    // ✅ 启动日志
     Log.Information("Application started successfully!");
     app.Run();
 }
