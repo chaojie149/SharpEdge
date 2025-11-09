@@ -2,25 +2,26 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Core.Entity.Entities;
 
 namespace Sys.Entity.Models;
 
 /// <summary>
-/// 用户与角色关联表
+/// jwt黑名单
 /// </summary>
-public partial class SysUserRole
+public partial class SysJwtBlack:BaseEntity<Guid>
 {
-    /// <summary>
-    /// 用户ID
-    /// </summary>
-    public Guid? UserId { get; set; } = null!;
+
 
     /// <summary>
-    /// 角色ID
+    /// token
     /// </summary>
-    public Guid? RoleId { get; set; } = null!;
+    public string? Jti { get; set; }
 
-    public virtual SysRole Role { get; set; } = null!;
+    /// <summary>
+    /// 过期时间
+    /// </summary>
+    public DateTime? ExpireAt { get; set; }
 
-    public virtual SysUser User { get; set; } = null!;
+    public DateTime? CreatedAt { get; set; }
 }

@@ -20,6 +20,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "sys_jwt_black",
+         "ObjectType": 0
+      },
+      {
          "Name": "sys_login_log",
          "ObjectType": 0
       },
@@ -64,7 +68,7 @@
    "UseNoNavigations": false,
    "UseNoObjectFilter": false,
    "UseNodaTime": false,
-   "UseNullableReferences": false,
+   "UseNullableReferences": true,
    "UsePrefixNavigationNaming": false,
    "UseSchemaFolders": false,
    "UseSchemaNamespaces": false,

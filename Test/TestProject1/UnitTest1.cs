@@ -1,5 +1,9 @@
-﻿using Core.Service.Util;
+﻿using System.Security.Claims;
+using Core.Service.Config;
+using Core.Service.GlobalConfig;
+using Core.Service.Util;
 using Core.WebApi.Extensions;
+using Core.WebApi.Jwt;
 
 namespace TestProject1;
 
@@ -8,6 +12,13 @@ public class Tests
     [SetUp]
     public void Setup()
     {
+        AppGlobalSettings.AuthConfig = new AuthConfig
+        {
+            SecretKey = "C5ABA9E202D94C43A3CA66002BF77FAF",
+            Issuer = "SharpEdge",
+            Audience = "FastNetCoreProUser",
+            Expire = 60
+        };
     }
 
 
@@ -63,7 +74,32 @@ public class Tests
         //IRouter Route = new Route(this,route);
     }
     
-    
+    [Test]
+    public void VeryToken()
+    {
+       
+      IJwtService jwtService = new JwtService();
+
+
+      ClaimsPrincipal? claimsPrincipal = jwtService.ValidateToken(
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiQWRtaW4iLCJ1aWQiOiIwMTlhNjJlMC03NWI1LTcwNjgtOTQzYi1lZTQ5ZjkyYTMyYmIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdXBlckFkbWluIiwibmJmIjoxNzYyNjkwMDE2LCJleHAiOjE3NjI2OTcyMTYsImlzcyI6IlNoYXJwRWRnZSIsImF1ZCI6IkZhc3ROZXRDb3JlUHJvVXNlciJ9.HOZI_qNCGEzs7vzq2Oqz8Rn-3_t2cYBm20sUHMHyrx0");
+         
+         Console.WriteLine(claimsPrincipal.Identity.Name);
+         
+         foreach (var claimsPrincipalClaim in claimsPrincipal.Claims)
+         {
+             Console.WriteLine($"{claimsPrincipalClaim.Type} {claimsPrincipalClaim.Value}");
+         }
+         
+         foreach (var claimsPrincipalIdentity in claimsPrincipal.Identities)
+         {
+             Console.WriteLine($"-- {claimsPrincipalIdentity.Name}");
+
+         }
+         
+         Console.WriteLine($"UID {claimsPrincipal.Claims .FirstOrDefault(x => x.Type.Equals("uid"))?.Value}");
+    }
+
     
     
     [Test]

@@ -1,22 +1,25 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using AutoMapper;
 using Core.Persistent.Repository;
-using Core.Service;
 using Core.Service.Base;
+using Core.Service.Cache;
 using Core.Service.Util;
 using Core.WebApi.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Serilog;
 using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Entity.Params;
 using Sys.Entity.Response;
+using DateTimeUtil = Core.Service.Util.DateTimeUtil;
 using ILogger = Serilog.ILogger;
 
-namespace Sys.Service;
+namespace Sys.Service.Service;
 
 public class LoginService : BaseMgr, ILoginService
 {
@@ -26,16 +29,16 @@ public class LoginService : BaseMgr, ILoginService
     private readonly IMapper _mapper;
     private readonly IJwtService _jwtService; // 假设你有这个服务生成JWT
 
-    public LoginService(
-        IUnitOfWork unitOfWork,
-        IHttpContextAccessor httpContextAccessor,
-        IMapper mapper,
-        IJwtService jwtService)
+    private readonly IRedisManager _redisManager;
+
+
+    public LoginService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IMapper mapper, IJwtService jwtService, IRedisManager redisManager)
     {
         _unitOfWork = unitOfWork;
         _httpContextAccessor = httpContextAccessor;
         _mapper = mapper;
         _jwtService = jwtService;
+        _redisManager = redisManager;
     }
 
     /// <summary>
@@ -136,12 +139,13 @@ public class LoginService : BaseMgr, ILoginService
         // === 6. 生成 Token ===
         var token = _jwtService.GenerateToken(claims);
 
-       
+        var refreshToken = Guid.NewGuid().ToString("N"); // 可随机字符串
+        
         await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
             // === 7. 更新最后登录信息 ===
             userEntity.LastLoginIp = ip;
-            userEntity.LastLoginTime = DateTime.UtcNow;
+            userEntity.LastLoginTime = DateTime.Now;
             _unitOfWork.Repository<SysUser, Guid>().Update(userEntity);
         
             SysLoginLog loginLog = new SysLoginLog
@@ -157,20 +161,137 @@ public class LoginService : BaseMgr, ILoginService
         
             await _unitOfWork.SaveChangesAsync();
         });
-
+        
+        //redis保存refresh token
+        await _redisManager.StringSetAsync(CacheKey.JwtRefreshKey + userDto.Id, refreshToken, TimeSpan.FromDays(7));
 
         // === 8. 构造返回对象 ===
         var result = new UserInfo
         {
             Token = token,
+            RefreshToken = refreshToken,
             Username = userDto.Username,
             RealName = userDto.Name,
             Roles = userDto.Roles,
-            LastLoginTime = userEntity.LastLoginTime
+            LastLoginTime = userEntity.LastLoginTime,
+            Email = userDto.Email
         };
 
         _logger.Information("用户 {Username} 登录成功，Token 已下发", userEntity.Username);
 
         return result;
+    }
+
+    public async Task<UserInfo> RefreshToken(string refreshToken)
+    {
+        var token = ServiceOperator.AccessToken;
+        if (string.IsNullOrWhiteSpace(token))
+            throw new AuthenticationFailureException("未提供 Token");
+
+        var principal = _jwtService.ValidateToken(token);
+        string? userId = ServiceOperator.UserId;
+        
+        var jti = principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        var exp = principal?.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(jti) || string.IsNullOrEmpty(exp))
+            throw new AuthenticationFailureException("token无效");
+        
+        string? cacheRefreshToken = await _redisManager.StringGetAsync(CacheKey.JwtRefreshKey + userId);
+        
+        if (userId == null || cacheRefreshToken == null || ServiceOperator.AccessToken == null)
+        {
+            throw new SecurityTokenExpiredException("token无效");
+        }
+
+        if (refreshToken != cacheRefreshToken)
+        {
+            throw new SecurityTokenExpiredException("token刷新失败");
+        }
+        
+        // === 2. 查询用户 ===
+        var userEntity = await _unitOfWork.Repository<SysUser, Guid>()
+            .Query()
+            .Include(u => u.SysUserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(x => x.Id == new Guid(userId));
+        
+        var userDto = _mapper.Map<SysUserDto>(userEntity);
+        
+        if (userEntity == null)
+        {
+            throw new SecurityTokenExpiredException("token无效");
+        }
+        
+        // === 5. 构造 Claims ===
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, userEntity.Username),
+            new("uid", userEntity.Id.ToString()!)
+        };
+        if (userEntity.SysUserRoles.Any())
+        {
+            foreach (var role in userEntity.SysUserRoles.Select(r => r.Role))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.Code ?? role.Name));
+            }
+        }
+        
+        
+        var newAccessToken = _jwtService.GenerateToken(claims);
+        var newRefreshToken = Guid.NewGuid().ToString("N");
+        
+        //redis保存refresh token
+        await _redisManager.StringSetAsync(CacheKey.JwtRefreshKey + userId  , newRefreshToken, TimeSpan.FromDays(7));
+        
+
+        // var expireAt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).DateTime;
+        var expireAt = DateTimeUtil.GetDateTimeByTimeStamp(long.Parse(exp));
+        var ttl = expireAt - DateTime.Now;
+        if (ttl.TotalSeconds <= 0)
+            ttl = TimeSpan.FromMinutes(1); // 至少保留 1 分钟防御性写入
+        //旧的token加入黑名单
+        await _redisManager.StringSetAsync(CacheKey.JwtBlackKey + jti, ServiceOperator.AccessToken!, ttl);
+
+        // === 8. 构造返回对象 ===
+        var result = new UserInfo
+        {
+            Token = newAccessToken,
+            RefreshToken = newRefreshToken,
+            Username = userDto.Username,
+            RealName = userDto.Name,
+            Roles = userDto.Roles,
+            LastLoginTime = userEntity.LastLoginTime,
+            Email = userDto.Email
+        };
+
+        _logger.Information("用户 {Username} 刷新Token成功，Token 已下发 RefreshToken {RefreshToken} NewAccessToken {Token}", userEntity.Username,result.RefreshToken,result.Token);
+
+        return result;
+    }
+
+    public async Task Logout()
+    {
+        var token = ServiceOperator.AccessToken;
+        if (string.IsNullOrWhiteSpace(token))
+            throw new AuthenticationFailureException("未提供 Token");
+
+        var principal = _jwtService.ValidateToken(token);
+        var userId = principal?.FindFirst("uid")?.Value;
+        var jti = principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        var exp = principal?.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(jti) || string.IsNullOrEmpty(exp))
+            throw new AuthenticationFailureException("无效 Token");
+
+        // 删除 RefreshToken
+        await _redisManager.KeyDeleteAsync(CacheKey.JwtRefreshKey + userId);
+
+        var expireAt = DateTimeUtil.GetDateTimeByTimeStamp(long.Parse(exp));
+        var ttl = expireAt - DateTime.Now;
+        if (ttl.TotalSeconds <= 0)
+            ttl = TimeSpan.FromMinutes(1); // 至少保留 1 分钟防御性写入
+        await _redisManager.StringSetAsync(CacheKey.JwtBlackKey + jti, ServiceOperator.AccessToken!, ttl);
+
+        _logger.Information("用户 {UserId} 已登出，token 加入黑名单", userId);
     }
 }

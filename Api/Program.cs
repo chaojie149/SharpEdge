@@ -3,7 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Core.Persistent.Extensions;
 using Core.Service;
-using Core.Service.Auth;
+using Core.Service.Cache;
 using Core.Service.Config;
 using Core.Service.GlobalConfig;
 using Core.WebApi.Jwt;
@@ -15,6 +15,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
+using StackExchange.Redis;
 using Sys.Entity.Models;
 using Sys.Service;
 using Sys.WebApi;
@@ -84,7 +85,10 @@ try
     });
     // ✅ JWT
     builder.Services.AddSingleton<IJwtService,JwtService>();
-    
+    builder.Services.AddSingleton<IConnectionMultiplexer>(
+        ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
+    builder.Services.AddScoped<IRedisManager, RedisManager>();
+
     //模块注入
     builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     {
@@ -130,10 +134,10 @@ try
 
     app.UseSerilogRequestLogging();
     app.UseExceptionHandlerMiddleware();
-
+    app.UseScopedServiceProvider();
+    app.UseMiddleware<JwtBlacklistMiddleware>();
     app.UseAuthentication(); // ✅ 必须在授权前
     app.UseAuthorization();
-
     app.MapControllers();
 
     Log.Information("Application started successfully!");

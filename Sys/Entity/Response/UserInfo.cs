@@ -11,6 +11,8 @@ namespace Sys.Entity.Response
     public  class UserInfo
     {
         public required string Token { get; set; }
+        
+        public required string RefreshToken { get; set; }
 
         public required string Username { get; set; }
         

@@ -14,7 +14,7 @@ public static class AppGlobalSettings
     public static IConfiguration Configuration { get; private set; }
     public static Secret Secret { get; private set; }
 
-    public static AuthConfig AuthConfig { get; private set; }
+    public static AuthConfig AuthConfig { get; set; }
 
     public static IServiceCollection AddGlobalSettings(this IServiceCollection services, IConfiguration configuration)
     {
