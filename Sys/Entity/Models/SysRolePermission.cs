@@ -2,49 +2,35 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace Sys.Entity.Models;
 
 /// <summary>
 /// 角色与权限关联表
 /// </summary>
-[Table("sys_role_permission")]
-[Index("RoleId", Name = "fk_rolepermission_role")]
 public partial class SysRolePermission
 {
-    [Key]
-    [Column("id")]
-    public long Id { get; set; }
+    public string Id { get; set; }
 
     /// <summary>
     /// 角色ID
     /// </summary>
-    [Column("role_id")]
-    public int RoleId { get; set; }
+    public string RoleId { get; set; }
 
     /// <summary>
     /// 权限类型(menu=页面权限, api=接口权限)
     /// </summary>
-    [Required]
-    [Column("permission_type", TypeName = "enum('menu','api')")]
     public string PermissionType { get; set; }
 
     /// <summary>
     /// 权限ID（对应sys_menu_permission.id 或 sys_api.id）
     /// </summary>
-    [Column("permission_id")]
-    public long PermissionId { get; set; }
+    public string PermissionId { get; set; }
 
     /// <summary>
     /// 创建时间
     /// </summary>
-    [Column("created_time", TypeName = "datetime")]
     public DateTime CreatedTime { get; set; }
 
-    [ForeignKey("RoleId")]
-    [InverseProperty("SysRolePermissions")]
     public virtual SysRole Role { get; set; }
 }

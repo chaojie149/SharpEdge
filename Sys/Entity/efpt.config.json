@@ -1,6 +1,6 @@
 ﻿{
    "CodeGenerationMode": 5,
-   "ContextClassName": "net_core_proContext",
+   "ContextClassName": "SysDbContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
    "IncludeConnectionString": false,
@@ -17,6 +17,10 @@
    "Tables": [
       {
          "Name": "sys_api",
+         "ObjectType": 0
+      },
+      {
+         "Name": "sys_login_log",
          "ObjectType": 0
       },
       {
@@ -49,13 +53,13 @@
    "UseDateOnlyTimeOnly": true,
    "UseDbContextSplitting": false,
    "UseDecimalDataAnnotationForSprocResult": true,
-   "UseFluentApiOnly": false,
+   "UseFluentApiOnly": true,
    "UseHandleBars": false,
    "UseHierarchyId": false,
    "UseInflector": true,
    "UseInternalAccessModifiersForSprocsAndFunctions": false,
    "UseLegacyPluralizer": false,
-   "UseManyToManyEntity": false,
+   "UseManyToManyEntity": true,
    "UseNoDefaultConstructor": false,
    "UseNoNavigations": false,
    "UseNoObjectFilter": false,

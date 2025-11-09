@@ -1,0 +1,42 @@
+project:
+  namespace: Sys.Entity
+  directory: .\
+  nullable: true
+  fileScopedNamespace: true
+
+database:
+  provider: MySQL
+  connectionString: "Server=localhost;Port=3306;Database=net_core_pro;User=root;Password=root;Charset=utf8mb4;SslMode=None;AllowPublicKeyRetrieval=True;"
+
+
+
+model:
+  shared:
+    namespace: '{Project.Namespace}.Domain.Models'
+    directory: '{Project.Directory}\Domain\Models'
+
+  read:
+    name: '{Entity.Name}ReadModel'
+    document: true
+
+  create:
+    name: '{Entity.Name}CreateModel'
+    document: true
+
+  update:
+    name: '{Entity.Name}UpdateModel'
+    document: true
+
+  mapper:
+    namespace: '{Project.Namespace}.Domain.Mapping'
+    directory: '{Project.Directory}\Domain\Mapping'
+    name: '{Entity.Name}Profile'
+    baseClass: AutoMapper.Profile
+    document: true
+
+  validator:
+    namespace: '{Project.Namespace}.Domain.Validation'
+    directory: '{Project.Directory}\Domain\Validation'
+    name: '{Model.Name}Validator'
+    baseClass: FluentValidation.AbstractValidator<{Model.Name}>
+    document: true

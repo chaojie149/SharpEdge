@@ -19,6 +19,8 @@ public abstract class AuditableEntity<TKey> : BaseEntity<TKey>, IAuditableEntity
     
     [Column("modify_by")]
     public string? ModifyBy { get; set; }
-
+    protected AuditableEntity() : base()
+    {
+    }
 
 }

@@ -7,9 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Autofac" Version="8.4.0" />
-      <PackageReference Include="AutoMapper" Version="15.1.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.10" />
+      <ProjectReference Include="..\..\Core\Core.WebApi\Core.WebApi.csproj" />
+      <ProjectReference Include="..\Entity\Sys.Entity.csproj" />
+      <ProjectReference Include="..\Sys.Service\Sys.Service.csproj" />
     </ItemGroup>
 
 </Project>

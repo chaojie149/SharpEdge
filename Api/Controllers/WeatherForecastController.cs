@@ -1,7 +1,12 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Core.Persistent.Repository;
 using Example.Entity.Data.Entities;
 using Example.Service;
 using FastNetPro;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Service;
 
@@ -13,66 +18,81 @@ namespace Api.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        
-        private readonly UserService _userService;
-        private readonly ExampleService _exampleService;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public WeatherForecastController(UserService userService, ExampleService exampleService)
+        private readonly ILoginService _userService;
+
+
+        public WeatherForecastController(IUnitOfWork unitOfWork, IMapper mapper, ILoginService userService)
         {
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
             _userService = userService;
-            _exampleService = exampleService;
         }
 
-        private static readonly string[] Summaries =
-        [
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        ];
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public async Task<IEnumerable<SysRole>> Get()
+        [HttpPost("add")]
+        public async Task<IActionResult> AddTest()
         {
 
-            IList<SysRole> sysRoles = await _userService.GetRoleAsync();
-            
-            return sysRoles;
+
+             // await _unitOfWork.Repository<SysLoginLog, Guid>().AddAsync(new SysLoginLog()
+             // {
+             //     Ip = "127.0.0.1",
+             //     Username = "Admin",
+             //     Device = "Iphone",
+             //     LogDate = DateTime.Now,
+             //     RequestHeader = "{}",
+             //     Status = 1
+             // });
+             await _unitOfWork.Repository<SysApi, Guid>().AddAsync(new SysApi()
+             {
+               Name = "ok",
+               Method = ".api",
+               Path = "/a",
+               Module = "Sys",
+               PermissionCode = "ok"
+             });
+             await _unitOfWork.SaveChangesAsync();
+             await _unitOfWork.CommitTransactionAsync();
+
+            return Ok();
         }
-        
-        [HttpGet("add")]
-        public async Task<SysRole> AddRole()
+
+        [HttpPost("t1")]
+        public async Task<IActionResult> t1()
         {
 
-            SysRole sysRole = new SysRole();
+            //var sysUser = await _unitOfWork.Repository<SysUser, Guid>()
+            //    .Query()
+            //    //.Select(u => new
+            //    //{
+            //    //    u.Id,
+            //    //    u.Username,
+            //    //    u.Name,
+            //    //    Roles = u.SysUserRoles
+            //    //        .Select(ur => new
+            //    //        {
+            //    //            ur.Role.Id,
+            //    //            ur.Role.Name
+            //    //        })
+            //    //})
+            //    .Include(x=>x.SysUserRoles)
+            //    .FirstOrDefaultAsync();
 
-            sysRole.Code = "TEST";
-            sysRole.Name = "TEST";
-            sysRole.Enable  = 1;
-            await _userService.AddRoleAsync(sysRole);
-            return sysRole;
+
+            var user = await _unitOfWork.Repository<SysUser, Guid>()
+                .Query()
+                .Include(u => u.SysUserRoles)
+                .ThenInclude(ur => ur.Role)
+                .ProjectTo<SysUserDto>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(u => u.Username == "Admin");
+
+            return Ok(user);
+
+
+
         }
 
-        [HttpGet("addApi")]
-        public async Task<SysApi> AddApi()
-        {
-
-            SysApi sysApi = new SysApi();
-
-            sysApi.Method = "POST";
-            sysApi.Name = "添加接口";
-            sysApi.Module  = "SYS";
-            sysApi.PermissionCode  = "SYS:AddApi";
-            sysApi.Path = "/api";
-            
-            await _userService.AddApiPermission(sysApi);
-            return sysApi;
-        }
-        
-        [HttpGet("testDb")]
-        public async Task<IEnumerable<GoAdmin>> TestDbAsync()
-        {
-
-           
-            ;
-            return await _exampleService.GetAllUserAsync();
-        }
     }
 }

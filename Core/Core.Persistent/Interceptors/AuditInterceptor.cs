@@ -41,7 +41,7 @@ public class AuditInterceptor : SaveChangesInterceptor
 
         var currentUser = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "System";
         var utcNow = DateTime.UtcNow;
-
+        
         foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
         {
             switch (entry.State)

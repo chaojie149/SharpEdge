@@ -1,4 +1,4 @@
-﻿namespace Core.WebApi;
+﻿namespace Core.Service.Base;
 
 public abstract class ScopedServiceProviderHolder
 {

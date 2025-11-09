@@ -8,7 +8,11 @@
 
     <ItemGroup>
 
+      <ProjectReference Include="..\..\Core.Service\Core.Service.csproj" />
+
       <ProjectReference Include="..\..\Core\Core.Persistent\Core.Persistent.csproj" />
+
+      <ProjectReference Include="..\..\Core\Core.WebApi\Core.WebApi.csproj" />
 
       <ProjectReference Include="..\Entity\Sys.Entity.csproj" />
     </ItemGroup>
