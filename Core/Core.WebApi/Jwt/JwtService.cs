@@ -1,28 +1,31 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Core.Service.Config;
 using Core.Service.GlobalConfig;
-using Core.WebApi.Jwt;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Core.Service.Auth;
+namespace Core.WebApi.Jwt;
 
 public class JwtService : IJwtService
 {
-   
     public string GenerateToken(IEnumerable<Claim> claims)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AppGlobalSettings.AuthConfig.SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        // 确保 jti 存在
+        var claimsList = claims.ToList();
+        if (claimsList.All(c => c.Type != JwtRegisteredClaimNames.Jti))
+        {
+            claimsList.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+        }
+
         var token = new JwtSecurityToken(
             issuer: AppGlobalSettings.AuthConfig.Issuer,
             audience: AppGlobalSettings.AuthConfig.Audience,
-            claims: claims,
-            notBefore: DateTime.UtcNow,
-            expires: DateTime.UtcNow.AddMinutes(AppGlobalSettings.AuthConfig.Expire),
+            claims: claimsList,
+            notBefore: DateTime.Now,
+            expires: DateTime.Now.AddMinutes(AppGlobalSettings.AuthConfig.Expire),
             signingCredentials: creds
         );
 

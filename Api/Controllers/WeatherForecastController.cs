@@ -4,17 +4,20 @@ using Core.Persistent.Repository;
 using Example.Entity.Data.Entities;
 using Example.Service;
 using FastNetPro;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Service;
+using Sys.Service.Service;
 
 namespace Api.Controllers
 {
     
     
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
@@ -54,7 +57,6 @@ namespace Api.Controllers
                PermissionCode = "ok"
              });
              await _unitOfWork.SaveChangesAsync();
-             await _unitOfWork.CommitTransactionAsync();
 
             return Ok();
         }
