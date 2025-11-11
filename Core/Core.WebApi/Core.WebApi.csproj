@@ -27,9 +27,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\Core.Service\Core.Service.csproj" />
       <ProjectReference Include="..\Core.Log\Core.Log.csproj" />
       <ProjectReference Include="..\Core.Persistent\Core.Persistent.csproj" />
+      <ProjectReference Include="..\Core.Service\Core.Service.csproj" />
     </ItemGroup>
 
 </Project>

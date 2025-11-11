@@ -7,8 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Core\Core.Service\Core.Service.csproj" />
       <ProjectReference Include="..\..\Core\Core.WebApi\Core.WebApi.csproj" />
-      <ProjectReference Include="..\Entity\Sys.Entity.csproj" />
+      <ProjectReference Include="..\Sys.Entity\Sys.Entity.csproj" />
       <ProjectReference Include="..\Sys.Service\Sys.Service.csproj" />
     </ItemGroup>
 

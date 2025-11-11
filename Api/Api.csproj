@@ -14,12 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core.Service\Core.Service.csproj" />
+    <ProjectReference Include="..\Core\Core.Service\Core.Service.csproj" />
     <ProjectReference Include="..\Core\Core.Entity\Core.Entity.csproj" />
     <ProjectReference Include="..\Core\Core.Log\Core.Log.csproj" />
     <ProjectReference Include="..\Core\Core.Persistent\Core.Persistent.csproj" />
     <ProjectReference Include="..\Core\Core.WebApi\Core.WebApi.csproj" />
-    <ProjectReference Include="..\Sys\Entity\Sys.Entity.csproj" />
+    <ProjectReference Include="..\Sys\Sys.Entity\Sys.Entity.csproj" />
     <ProjectReference Include="..\Sys\Sys.Service\Sys.Service.csproj" />
     <ProjectReference Include="..\Sys\Sys.WebApi\Sys.WebApi.csproj" />
   </ItemGroup>
