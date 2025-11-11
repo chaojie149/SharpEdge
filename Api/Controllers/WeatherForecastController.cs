@@ -1,8 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Core.Persistent.Repository;
-using Example.Entity.Data.Entities;
-using Example.Service;
 using FastNetPro;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

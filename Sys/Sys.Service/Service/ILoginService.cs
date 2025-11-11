@@ -7,11 +7,11 @@ namespace Sys.Service.Service
     {
 
         //登录接口
-        public Task<UserInfo> Login(LoginRequestParams loginRequestParams);
+        public Task<LoginResponse> Login(LoginRequestParams loginRequestParams);
 
     
         
-        public Task<UserInfo> RefreshToken(string refreshToken);
+        public Task<LoginResponse> RefreshToken(string refreshToken);
 
 
         public Task Logout();

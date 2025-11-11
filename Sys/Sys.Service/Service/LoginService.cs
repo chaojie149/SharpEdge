@@ -85,7 +85,7 @@ public class LoginService : BaseMgr, ILoginService
             headerName, 
             StringComparer.OrdinalIgnoreCase);
     }
-    public async Task<UserInfo> Login(LoginRequestParams loginRequestParams)
+    public async Task<LoginResponse> Login(LoginRequestParams loginRequestParams)
     {
         var ip = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         _logger.Information("登录请求 IP: {IP}, 用户名: {Username}, 请求体: {RequestJson}",
@@ -166,15 +166,19 @@ public class LoginService : BaseMgr, ILoginService
         await _redisManager.StringSetAsync(CacheKey.JwtRefreshKey + userDto.Id, refreshToken, TimeSpan.FromDays(7));
 
         // === 8. 构造返回对象 ===
-        var result = new UserInfo
+        var result = new LoginResponse()
         {
-            Token = token,
+            Token= token,
             RefreshToken = refreshToken,
-            Username = userDto.Username,
-            RealName = userDto.Name,
-            Roles = userDto.Roles,
-            LastLoginTime = userEntity.LastLoginTime,
-            Email = userDto.Email
+            UserInfo = new UserInfo
+            {
+              
+                Username = userDto.Username,
+                RealName = userDto.Name,
+                Roles = userDto.Roles,
+                LastLoginTime = userEntity.LastLoginTime,
+                Email = userDto.Email
+            },
         };
 
         _logger.Information("用户 {Username} 登录成功，Token 已下发", userEntity.Username);
@@ -182,7 +186,7 @@ public class LoginService : BaseMgr, ILoginService
         return result;
     }
 
-    public async Task<UserInfo> RefreshToken(string refreshToken)
+    public async Task<LoginResponse> RefreshToken(string refreshToken)
     {
         var token = ServiceOperator.AccessToken;
         if (string.IsNullOrWhiteSpace(token))
@@ -253,15 +257,20 @@ public class LoginService : BaseMgr, ILoginService
         await _redisManager.StringSetAsync(CacheKey.JwtBlackKey + jti, ServiceOperator.AccessToken!, ttl);
 
         // === 8. 构造返回对象 ===
-        var result = new UserInfo
+        // === 8. 构造返回对象 ===
+        var result = new LoginResponse()
         {
-            Token = newAccessToken,
+            Token= newAccessToken,
             RefreshToken = newRefreshToken,
-            Username = userDto.Username,
-            RealName = userDto.Name,
-            Roles = userDto.Roles,
-            LastLoginTime = userEntity.LastLoginTime,
-            Email = userDto.Email
+            UserInfo = new UserInfo
+            {
+              
+                Username = userDto.Username,
+                RealName = userDto.Name,
+                Roles = userDto.Roles,
+                LastLoginTime = userEntity.LastLoginTime,
+                Email = userDto.Email
+            },
         };
 
         _logger.Information("用户 {Username} 刷新Token成功，Token 已下发 RefreshToken {RefreshToken} NewAccessToken {Token}", userEntity.Username,result.RefreshToken,result.Token);

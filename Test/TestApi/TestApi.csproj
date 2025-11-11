@@ -27,8 +27,6 @@
       <ProjectReference Include="..\..\Core\Core.Log\Core.Log.csproj" />
       <ProjectReference Include="..\..\Core\Core.Persistent\Core.Persistent.csproj" />
       <ProjectReference Include="..\..\Core\Core.WebApi\Core.WebApi.csproj" />
-      <ProjectReference Include="..\..\Example\Example.Entity\Example.Entity.csproj" />
-      <ProjectReference Include="..\..\Example\Example.Service\Example.Service.csproj" />
       <ProjectReference Include="..\..\Sys\Entity\Sys.Entity.csproj" />
       <ProjectReference Include="..\..\Sys\Sys.Service\Sys.Service.csproj" />
       <ProjectReference Include="..\..\Sys\Sys.WebApi\Sys.WebApi.csproj" />

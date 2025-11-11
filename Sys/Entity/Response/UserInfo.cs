@@ -6,9 +6,7 @@ namespace Sys.Entity.Response
     //登录返回用户信息
     public  class UserInfo
     {
-        public required string Token { get; set; }
-        
-        public required string RefreshToken { get; set; }
+      
 
         public required string Username { get; set; }
         
