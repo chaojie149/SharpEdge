@@ -207,21 +207,77 @@
 
 3. 权限功能设计，接口权限和菜单权限的接口实现。
 
-4. 
 
 
 
 
 
 
+### DockerCompose 一键部署
 
+```
+version: '3.9'
 
+services:
+  # ================================
+  # MongoDB
+  # ================================
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+    ports:
+      - "27017:27017"
+    volumes:
+      - "E:/Data/MongoDB:/data/db"
 
+  # ================================
+  # MinIO
+  # ================================
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: 12345678
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # API 端口
+      - "9001:9001"   # 控制台端口
+    volumes:
+      - "E:/Data/Minio:/data"
 
+  # ================================
+  # Redis
+  # ================================
+  redis:
+    image: redis:latest
+    container_name: local_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - "E:/Data/Redis:/data"
 
+  # ================================
+  # MySQL
+  # ================================
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - "D:/Data/MySqlData:/var/lib/mysql"
 
-
-
+```
 
 
 
