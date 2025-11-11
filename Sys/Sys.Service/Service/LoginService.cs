@@ -245,8 +245,8 @@ public class LoginService : BaseMgr, ILoginService
         
 
         // var expireAt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).DateTime;
-        var expireAt = DateTimeUtil.GetDateTimeByTimeStamp(long.Parse(exp));
-        var ttl = expireAt - DateTime.Now;
+        var expireAt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).UtcDateTime;
+        var ttl = expireAt - DateTime.UtcNow;
         if (ttl.TotalSeconds <= 0)
             ttl = TimeSpan.FromMinutes(1); // 至少保留 1 分钟防御性写入
         //旧的token加入黑名单
@@ -286,8 +286,8 @@ public class LoginService : BaseMgr, ILoginService
         // 删除 RefreshToken
         await _redisManager.KeyDeleteAsync(CacheKey.JwtRefreshKey + userId);
 
-        var expireAt = DateTimeUtil.GetDateTimeByTimeStamp(long.Parse(exp));
-        var ttl = expireAt - DateTime.Now;
+        var expireAt = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).UtcDateTime;
+        var ttl = expireAt - DateTime.UtcNow;
         if (ttl.TotalSeconds <= 0)
             ttl = TimeSpan.FromMinutes(1); // 至少保留 1 分钟防御性写入
         await _redisManager.StringSetAsync(CacheKey.JwtBlackKey + jti, ServiceOperator.AccessToken!, ttl);

@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper.QueryableExtensions;
 using Core.Entity.Entities;
 using Core.Persistent.Entities;
+using Core.Persistent.Extensions;
+using Core.Persistent.Extensions.DynamicFilterModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using IConfigurationProvider = AutoMapper.IConfigurationProvider;
 
 namespace Core.Persistent.Repository;
 
@@ -82,6 +88,73 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         return (items, totalCount);
     }
 
+    /// <summary>
+    /// 高级动态查询（支持动态过滤、排序、分页）
+    /// </summary>
+    public virtual async Task<Extensions.DynamicFilterModel.PagedResult<TEntity>> QueryAsync(
+        PagedQueryRequest request, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = Query();
+
+        // 应用过滤
+        query = query.ApplyFilters(request.Filters);
+
+        // 获取总数
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // 应用排序
+        query = query.ApplySorts(request.Sorts);
+
+        // 应用分页
+        query = query.ApplyPaging(request.PageIndex, request.PageSize);
+
+        // 执行查询
+        var items = await query.ToListAsync(cancellationToken);
+
+        return new Extensions.DynamicFilterModel.PagedResult<TEntity>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageIndex = request.PageIndex,
+            PageSize = request.PageSize
+        };
+    }
+
+    public async Task<Extensions.DynamicFilterModel.PagedResult<TDestination>> QueryAsync<TDestination>(IConfigurationProvider configuration, PagedQueryRequest request,
+        CancellationToken cancellationToken = default)
+    {  // 基础查询
+        var query = Query();
+
+        // 应用动态过滤（来自 Core.Persistent.Extensions.DynamicFilterModel）
+        query = query.ApplyFilters(request.Filters);
+
+        // 获取总数
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // 应用排序
+        query = query.ApplySorts(request.Sorts);
+
+        // 投影到目标类型（例如 SysUserDto）
+        var projectedQuery = query.ProjectTo<TDestination>(configuration);
+
+        // 应用分页
+        projectedQuery = projectedQuery.ApplyPaging(request.PageIndex, request.PageSize);
+
+        // 执行查询
+        var items = await projectedQuery.ToListAsync(cancellationToken);
+
+        // 返回分页结果
+        return new Extensions.DynamicFilterModel.PagedResult<TDestination>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageIndex = request.PageIndex,
+            PageSize = request.PageSize
+        };throw new NotImplementedException();
+    }
+
+
     public virtual async Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? predicate = null, 
         CancellationToken cancellationToken = default)
@@ -128,6 +201,4 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     {
         _dbSet.RemoveRange(entities);
     }
-    
-    
 }

@@ -14,16 +14,7 @@ public sealed class SysUserDto
     /// </summary>
     public string Username { get; set; }
 
-    /// <summary>
-    /// 密码
-    /// </summary>
-    public string Password { get; set; }
-
-    /// <summary>
-    /// 加密盐
-    /// </summary>
-    public string Salt { get; set; }
-
+   
     /// <summary>
     /// 邮箱
     /// </summary>

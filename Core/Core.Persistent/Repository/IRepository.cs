@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Core.Entity.Entities;
 using Core.Persistent.Entities;
+using Core.Persistent.Extensions.DynamicFilterModel;
 
 namespace Core.Persistent.Repository;
 
@@ -25,6 +28,10 @@ public interface IRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         CancellationToken cancellationToken = default);
     
+    // 高级动态查询
+    Task<Extensions.DynamicFilterModel.PagedResult<TEntity>> QueryAsync(PagedQueryRequest request, CancellationToken cancellationToken = default);
+    Task<Extensions.DynamicFilterModel.PagedResult<TDestination>> QueryAsync<TDestination>(IConfigurationProvider configuration,PagedQueryRequest request, CancellationToken cancellationToken = default);
+    
     // 计数
     Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
@@ -39,6 +46,6 @@ public interface IRepository<TEntity, TKey> where TEntity : BaseEntity<TKey>
     
     // 查询构建器
     IQueryable<TEntity> Query(bool includeDeleted = false);
-    
-    
 }
+
+

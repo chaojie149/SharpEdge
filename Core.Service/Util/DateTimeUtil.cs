@@ -48,4 +48,24 @@ public static class DateTimeUtil
     {
         return LocalEpoch.AddMilliseconds(timestampMs);
     }
+    
+    #region UTC版本
+
+    private static readonly DateTime UtcEpoch = 
+        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    public static long GetUtcTimeStamp() =>
+        (long)(DateTime.UtcNow - UtcEpoch).TotalSeconds;
+
+    public static long GetUtcTimeStampMs() =>
+        (long)(DateTime.UtcNow - UtcEpoch).TotalMilliseconds;
+
+    public static DateTime GetUtcDateTimeByTimeStamp(long timestamp) =>
+        UtcEpoch.AddSeconds(timestamp);
+
+    public static DateTime GetUtcDateTimeByTimeStampMs(long timestampMs) =>
+        UtcEpoch.AddMilliseconds(timestampMs);
+
+    #endregion
+
 }

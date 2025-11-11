@@ -11,6 +11,7 @@ using Core.WebApi.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -30,21 +31,17 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // ✅ 使用 Autofac
     builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
   
 
     builder.Logging.ClearProviders();
     builder.Logging.AddSerilog();
 
-    // ✅ 完整 Serilog 配置
     builder.Host.UseSerilog((context, services, configuration) =>
     {
         configuration
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.*", LogEventLevel.Warning)
-           
-
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .Enrich.WithMachineName()
@@ -63,7 +60,8 @@ try
     builder.Services.AddControllers()
         .AddNewtonsoftJson(options =>
         {
-            options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            options.SerializerSettings.ContractResolver =
+                new CamelCasePropertyNamesContractResolver();
         });
 
     builder.Services.AddOpenApi();
@@ -120,18 +118,12 @@ try
     builder.Services.AddEndpointsApiExplorer();
     
     var app = builder.Build();
-
-    
-  
     
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
-
-
-
     app.UseSerilogRequestLogging();
     app.UseExceptionHandlerMiddleware();
     app.UseScopedServiceProvider();

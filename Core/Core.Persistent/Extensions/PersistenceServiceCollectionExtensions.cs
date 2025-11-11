@@ -1,5 +1,4 @@
-﻿using Core.Persistent.Caching;
-using Core.Persistent.Configuration;
+﻿using Core.Persistent.Configuration;
 using Core.Persistent.Context;
 using Core.Persistent.Interceptors;
 using Core.Persistent.Repository;
@@ -75,7 +74,7 @@ public static class PersistenceServiceCollectionExtensions
 
         // 7. 注册缓存服务(可选)
         services.AddMemoryCache();
-        services.AddSingleton<IQueryCacheService, QueryCacheService>();
+        // services.AddSingleton<IQueryCacheService, QueryCacheService>();
 
         return services;
     }
@@ -224,16 +223,5 @@ public static class PersistenceServiceCollectionExtensions
     }
 
 
-    /// <summary>
-    /// 添加缓存装饰器(需要 Scrutor 包)
-    /// 安装命令: dotnet add package Scrutor
-    /// 使用此方法后,所有 IRepository 注入都会自动使用缓存版本
-    /// </summary>
-    public static IServiceCollection AddCachedRepositoryDecorator(this IServiceCollection services)
-    {
-        // 需要安装 Scrutor 包才能使用此方法
-        services.Decorate(typeof(IRepository<,>), typeof(CachedRepository<,>));
-        
-        return services;
-    }
+
 }

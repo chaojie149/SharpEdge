@@ -24,8 +24,8 @@ public class JwtService : IJwtService
             issuer: AppGlobalSettings.AuthConfig.Issuer,
             audience: AppGlobalSettings.AuthConfig.Audience,
             claims: claimsList,
-            notBefore: DateTime.Now,
-            expires: DateTime.Now.AddMinutes(AppGlobalSettings.AuthConfig.Expire),
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddMinutes(AppGlobalSettings.AuthConfig.Expire),
             signingCredentials: creds
         );
 

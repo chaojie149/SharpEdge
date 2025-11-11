@@ -8,13 +8,13 @@ namespace Core.Service.GlobalConfig;
 
 public static class AppGlobalSettings
 {
-    public static string FinalRole = "Administrator";
+    public static readonly string FinalRole = "Administrator";
 
-    private static readonly ILogger _logger = Log.ForContext(typeof(AppGlobalSettings));
-    public static IConfiguration Configuration { get; private set; }
-    public static Secret Secret { get; private set; }
+    private static readonly ILogger Logger = Log.ForContext(typeof(AppGlobalSettings));
+    public static IConfiguration? Configuration { get; private set; }
+    public static Secret? Secret { get; private set; }
 
-    public static AuthConfig AuthConfig { get; set; }
+    public static AuthConfig? AuthConfig { get; set; }
 
     public static IServiceCollection AddGlobalSettings(this IServiceCollection services, IConfiguration configuration)
     {
@@ -32,10 +32,9 @@ public static class AppGlobalSettings
     public static void PrinterSettings()
     {
         // ✅ 在静态方法中直接使用 _logger
-        _logger.Information("🧩 Global settings loaded successfully:");
-        _logger.Information("AuthConfig => HeadField: {Issuer}, Prefix: {Audience}",
+        Logger.Information("🧩 Global settings loaded successfully:");
+        Logger.Information("AuthConfig => HeadField: {Issuer}, Prefix: {Audience}",
             AuthConfig?.HeadField, AuthConfig?.Prefix);
-        _logger.Information("Secret => Key: {Key}", Secret?.Key);
-        _logger.Information("FinalRole => {FinalRole}", FinalRole);
+        Logger.Information("FinalRole => {FinalRole}", FinalRole);
     }
 }
