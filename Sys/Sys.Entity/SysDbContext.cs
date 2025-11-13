@@ -189,17 +189,17 @@ public partial class SysDbContext : DbContext
                 .HasMaxLength(255)
                 .HasComment("前端路由")
                 .HasColumnName("route_path");
-            entity.Property(e => e.Seq)
-                .HasComment("排序")
-                .HasColumnName("seq");
+            // entity.Property(e => e.Seq)
+            //     .HasComment("排序")
+            //     .HasColumnName("seq");
             entity.Property(e => e.Title)
                 .HasMaxLength(64)
                 .HasComment("菜单标题")
                 .HasColumnName("title");
             entity.Property(e => e.Type)
-                .HasDefaultValueSql("'menu'")
+                .HasMaxLength(25)
                 .HasComment("菜单类型")
-                .HasColumnType("enum('group','catalog','menu','button')")
+                // .HasColumnType("enum('group','catalog','menu','button')")
                 .HasColumnName("type");
             entity.Property(e => e.Visible)
                 .HasDefaultValueSql("'1'")

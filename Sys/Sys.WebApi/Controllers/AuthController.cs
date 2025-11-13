@@ -6,7 +6,7 @@ using Sys.Service.Service;
 
 namespace Sys.WebApi.Controllers;
 
-[Tags("Authorization")]
+[Tags("System Management / Authorization")]
 [ApiController]
 [Route("[controller]")]
 

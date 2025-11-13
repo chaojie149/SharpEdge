@@ -2,20 +2,15 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Core.Entity.Entities;
 
 namespace Sys.Entity.Models;
 
 /// <summary>
 /// 页面权限
 /// </summary>
-public partial class SysMenuPermission
+public partial class SysMenuPermission:TreeEntity<Guid>
 {
-    public string Id { get; set; } = null!;
-
-    /// <summary>
-    /// 父级
-    /// </summary>
-    public int? ParentId { get; set; }
 
     /// <summary>
     /// 菜单标题
@@ -47,10 +42,7 @@ public partial class SysMenuPermission
     /// </summary>
     public string? Iframe { get; set; }
 
-    /// <summary>
-    /// 排序
-    /// </summary>
-    public int Seq { get; set; }
+
 
     /// <summary>
     /// 是否显示(1=显示,0=隐藏)
@@ -86,4 +78,6 @@ public partial class SysMenuPermission
     /// 修改人
     /// </summary>
     public string? ModifyBy { get; set; }
+
+
 }

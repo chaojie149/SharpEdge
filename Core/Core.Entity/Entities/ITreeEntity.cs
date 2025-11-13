@@ -3,7 +3,7 @@
 /// <summary>
 /// 树形结构接口
 /// </summary>
-public interface ITreeEntity<TKey>
+public interface ITreeEntity<TKey> where TKey : struct
 {
     /// <summary>
     /// 父节点ID

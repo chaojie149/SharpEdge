@@ -93,6 +93,10 @@ public class UserService:BaseMgr,IUserService
     public async Task<bool> UpdateUserAsync(SysUserAddOrEditParams userAddParams)
     {
         var repo = _unitOfWork.Repository<SysUser, Guid>();
+        if (userAddParams.Id  == null)
+        {
+            throw new ArgumentException("更新Id不存在");
+        }
         var sysUser = await repo.GetByIdAsync(Guid.Parse(userAddParams.Id));
 
         if (sysUser == null)

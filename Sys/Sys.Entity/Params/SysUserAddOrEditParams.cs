@@ -3,7 +3,7 @@
 public abstract class SysUserAddOrEditParams
 {
     
-    public string Id { get; set; }
+    public string? Id { get; set; }
     
     /// <summary>
     /// 姓名

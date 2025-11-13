@@ -6,7 +6,7 @@ namespace Core.Persistent.Repository;
 /// 树形结构仓储接口
 /// </summary>
 public interface ITreeRepository<TEntity, TKey> : IRepository<TEntity, TKey> 
-    where TEntity : BaseEntity<TKey>, ITreeEntity<TKey>
+    where TEntity : BaseEntity<TKey>, ITreeEntity<TKey> where TKey : struct 
 {
     /// <summary>
     /// 获取所有根节点

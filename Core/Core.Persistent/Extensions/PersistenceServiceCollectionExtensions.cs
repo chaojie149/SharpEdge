@@ -65,6 +65,7 @@ public static class PersistenceServiceCollectionExtensions
 
         // 5. 注册仓储和工作单元
         services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+        services.AddScoped(typeof(ITreeRepository<,>), typeof(TreeRepository<,>));
         services.AddScoped(typeof(ISpecificationRepository<,>), typeof(SpecificationRepository<,>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

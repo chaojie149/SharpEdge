@@ -14,10 +14,9 @@ namespace Core.Persistent.Repository;
 /// </summary>
 public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRepository<TEntity, TKey>
     where TEntity : BaseEntity<TKey>, ITreeEntity<TKey>
+    where TKey : struct // ✅ 关键约束，确保可用 Nullable<TKey>
 {
-    public TreeRepository(DbContext context) : base(context)
-    {
-    }
+    public TreeRepository(DbContext context) : base(context) { }
 
     /// <summary>
     /// 获取所有根节点
@@ -25,7 +24,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     public virtual async Task<List<TEntity>> GetRootNodesAsync(CancellationToken cancellationToken = default)
     {
         return await Query()
-            .Where(e => e.ParentId == null || e.ParentId.Equals(default(TKey)))
+            .Where(e => e.ParentId == null || e.ParentId.Value.Equals(default(TKey)))
             .OrderBy(e => e.Sort)
             .ToListAsync(cancellationToken);
     }
@@ -36,7 +35,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     public virtual async Task<List<TEntity>> GetChildrenAsync(TKey parentId, CancellationToken cancellationToken = default)
     {
         return await Query()
-            .Where(e => e.ParentId != null && e.ParentId.Equals(parentId))
+            .Where(e => e.ParentId.HasValue && e.ParentId.Value.Equals(parentId))
             .OrderBy(e => e.Sort)
             .ToListAsync(cancellationToken);
     }
@@ -50,8 +49,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
         if (parent == null)
             return new List<TEntity>();
 
-        var path = parent.Path ?? parent.Id?.ToString() ?? string.Empty;
-        
+        var path = parent.Path ?? parent.Id.ToString()!;
         return await Query()
             .Where(e => e.Path != null && e.Path.StartsWith(path + "/"))
             .OrderBy(e => e.Path)
@@ -80,12 +78,11 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
                     ancestors.Add(ancestor);
             }
         }
-
         return ancestors;
     }
 
     /// <summary>
-    /// 获取树形结构（返回嵌套的树）
+    /// 获取树形结构（嵌套树）
     /// </summary>
     public virtual async Task<List<TreeNode<TEntity, TKey>>> GetTreeAsync(
         TKey? rootId = default,
@@ -94,20 +91,18 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     {
         List<TEntity> entities;
 
-        if (rootId == null || rootId.Equals(default(TKey)))
+        if (rootId == null || rootId.Value.Equals(default(TKey)))
         {
-            // 获取所有数据
             entities = await Query().OrderBy(e => e.Sort).ToListAsync(cancellationToken);
         }
         else
         {
-            // 获取指定节点及其后代
-            var root = await GetByIdAsync(rootId, cancellationToken);
+            var root = await GetByIdAsync(rootId.Value, cancellationToken);
             if (root == null)
                 return new List<TreeNode<TEntity, TKey>>();
 
             entities = new List<TEntity> { root };
-            entities.AddRange(await GetDescendantsAsync(rootId, cancellationToken));
+            entities.AddRange(await GetDescendantsAsync(rootId.Value, cancellationToken));
         }
 
         return BuildTree(entities, rootId, maxDepth, 0);
@@ -123,21 +118,22 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     {
         IQueryable<TEntity> query = Query();
 
-        if (rootId != null && !rootId.Equals(default(TKey)))
+        if (rootId.HasValue && !rootId.Value.Equals(default(TKey)))
         {
-            var root = await GetByIdAsync(rootId, cancellationToken);
+            var root = await GetByIdAsync(rootId.Value, cancellationToken);
             if (root == null)
                 return new List<TEntity>();
 
-            var path = root.Path ?? root.Id?.ToString() ?? string.Empty;
-            query = query.Where(e => e.Id!.Equals(rootId) || (e.Path != null && e.Path.StartsWith(path + "/")));
+            var path = root.Path ?? root.Id.ToString()!;
+            query = query.Where(e => e.Id.Equals(rootId.Value) || (e.Path != null && e.Path.StartsWith(path + "/")));
         }
 
         if (maxDepth.HasValue)
         {
-            var rootLevel = rootId != null && !rootId.Equals(default(TKey)) 
-                ? (await GetByIdAsync(rootId, cancellationToken))?.Level ?? 0 
-                : 0;
+            var rootLevel = 0;
+            if (rootId.HasValue && !rootId.Value.Equals(default(TKey)))
+                rootLevel = (await GetByIdAsync(rootId.Value, cancellationToken))?.Level ?? 0;
+
             query = query.Where(e => e.Level <= rootLevel + maxDepth.Value);
         }
 
@@ -153,11 +149,11 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
         if (node == null)
             throw new ArgumentException("Node not found", nameof(nodeId));
 
-        // 检查是否移动到自己的子节点下（防止循环引用）
-        if (newParentId != null && !newParentId.Equals(default(TKey)))
+        // 防止移动到自己的子节点下
+        if (newParentId.HasValue && !newParentId.Value.Equals(default(TKey)))
         {
-            var descendants1 = await GetDescendantsAsync(nodeId, cancellationToken);
-            if (descendants1.Any(d => d.Id!.Equals(newParentId)))
+            var descendants = await GetDescendantsAsync(nodeId, cancellationToken);
+            if (descendants.Any(d => d.Id.Equals(newParentId.Value)))
                 throw new InvalidOperationException("Cannot move node to its own descendant");
         }
 
@@ -166,15 +162,15 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
 
         // 更新父节点和路径
         node.ParentId = newParentId;
-        
-        if (newParentId == null || newParentId.Equals(default(TKey)))
+
+        if (!newParentId.HasValue || newParentId.Value.Equals(default(TKey)))
         {
-            node.Path = node.Id?.ToString();
+            node.Path = node.Id.ToString();
             node.Level = 0;
         }
         else
         {
-            var newParent = await GetByIdAsync(newParentId, cancellationToken);
+            var newParent = await GetByIdAsync(newParentId.Value, cancellationToken);
             if (newParent == null)
                 throw new ArgumentException("New parent not found", nameof(newParentId));
 
@@ -184,18 +180,21 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
 
         Update(node);
 
-        // 更新所有子孙节点的路径和层级
-        var descendants = await Query()
-            .Where(e => e.Path != null && e.Path.StartsWith(oldPath + "/"))
-            .ToListAsync(cancellationToken);
-
-        var levelDiff = node.Level - oldLevel;
-
-        foreach (var descendant in descendants)
+        // 更新所有子孙节点路径和层级
+        if (!string.IsNullOrEmpty(oldPath))
         {
-            descendant.Path = descendant.Path!.Replace(oldPath!, node.Path!);
-            descendant.Level += levelDiff;
-            Update(descendant);
+            var descendants = await Query()
+                .Where(e => e.Path != null && e.Path.StartsWith(oldPath + "/"))
+                .ToListAsync(cancellationToken);
+
+            var levelDiff = node.Level - oldLevel;
+
+            foreach (var descendant in descendants)
+            {
+                descendant.Path = descendant.Path!.Replace(oldPath!, node.Path!);
+                descendant.Level += levelDiff;
+                Update(descendant);
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -207,7 +206,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     public virtual async Task<bool> HasChildrenAsync(TKey parentId, CancellationToken cancellationToken = default)
     {
         return await Query()
-            .AnyAsync(e => e.ParentId != null && e.ParentId.Equals(parentId), cancellationToken);
+            .AnyAsync(e => e.ParentId.HasValue && e.ParentId.Value.Equals(parentId), cancellationToken);
     }
 
     /// <summary>
@@ -223,9 +222,9 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
             return new List<TreeNode<TEntity, TKey>>();
 
         var children = allEntities
-            .Where(e => (parentId == null || parentId.Equals(default(TKey)))
-                ? (e.ParentId == null || e.ParentId.Equals(default(TKey)))
-                : (e.ParentId != null && e.ParentId.Equals(parentId)))
+            .Where(e => (!parentId.HasValue || parentId.Value.Equals(default(TKey)))
+                ? (!e.ParentId.HasValue || e.ParentId.Value.Equals(default(TKey)))
+                : (e.ParentId.HasValue && e.ParentId.Value.Equals(parentId.Value)))
             .OrderBy(e => e.Sort)
             .Select(e => new TreeNode<TEntity, TKey>
             {
@@ -238,7 +237,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     }
 
     /// <summary>
-    /// 尝试将字符串转换为TKey类型
+    /// 尝试将字符串转换为 TKey
     /// </summary>
     private bool TryConvertToKey(string value, out TKey result)
     {
@@ -249,7 +248,7 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
         }
         catch
         {
-            result = default!;
+            result = default;
             return false;
         }
     }

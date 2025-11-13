@@ -1,6 +1,7 @@
 ﻿using Core.Persistent.Extensions.DynamicFilterModel;
 using Core.Service.Exception;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Sys.Entity.Dtos;
 using Sys.Entity.Params;
@@ -11,8 +12,9 @@ namespace Sys.WebApi.Controllers;
 /// <summary>
 /// 用户管理接口
 /// </summary>
+///
+[Tags("System Management / User Management")]
 [ApiController]
-[Authorize]
 [Route("api/[controller]/[action]")]
 public class UserController : ControllerBase
 {
