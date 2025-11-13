@@ -30,7 +30,7 @@ public partial class SysRole:BaseEntity<Guid>
     /// <summary>
     /// 启用状态
     /// </summary>
-    public sbyte Enable { get; set; }
+    public bool Enable { get; set; }
 
     public virtual ICollection<SysRolePermission> SysRolePermissions { get; set; } = new List<SysRolePermission>();
 

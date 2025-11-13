@@ -206,7 +206,63 @@ public partial class SysDbContext : DbContext
                 .HasComment("是否显示(1=显示,0=隐藏)")
                 .HasColumnName("visible");
         });
+// 在 SysDbContext.OnModelCreating 方法中添加
 
+        modelBuilder.Entity<SysMenuApi>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("sys_menu_api", tb => tb.HasComment("菜单与API关联表"));
+
+            entity.HasIndex(e => e.MenuId, "idx_menu_id");
+            entity.HasIndex(e => e.ApiId, "idx_api_id");
+            entity.HasIndex(e => new { e.MenuId, e.ApiId }, "uk_menu_api").IsUnique();
+
+            entity.Property(e => e.Id)
+                .HasMaxLength(64)
+                .HasComment("主键")
+                .HasColumnName("id");
+
+            entity.Property(e => e.MenuId)
+                .HasMaxLength(64)
+                .HasComment("菜单权限ID")
+                .HasColumnName("menu_id");
+
+            entity.Property(e => e.ApiId)
+                .HasMaxLength(64)
+                .HasComment("API ID")
+                .HasColumnName("api_id");
+
+            entity.Property(e => e.Required)
+                .HasDefaultValue(true)
+                .HasComment("是否必需")
+                .HasColumnName("required");
+
+            entity.Property(e => e.Sort)
+                .HasComment("排序")
+                .HasColumnName("sort");
+
+            entity.Property(e => e.CreatedTime)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasComment("创建时间")
+                .HasColumnType("datetime")
+                .HasColumnName("created_time");
+
+            entity.Property(e => e.Remark)
+                .HasMaxLength(255)
+                .HasComment("备注")
+                .HasColumnName("remark");
+
+            entity.HasOne(d => d.Menu)
+                .WithMany(p => p.MenuApis)
+                .HasForeignKey(d => d.MenuId)
+                .HasConstraintName("fk_menuapi_menu");
+
+            entity.HasOne(d => d.Api)
+                .WithMany(p => p.MenuApis)
+                .HasForeignKey(d => d.ApiId)
+                .HasConstraintName("fk_menuapi_api");
+        });
         modelBuilder.Entity<SysRole>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");

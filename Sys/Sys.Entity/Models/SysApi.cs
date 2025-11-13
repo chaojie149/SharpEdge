@@ -20,5 +20,6 @@ public partial class SysApi:AuditableEntity<Guid>
 
     public string? PermissionCode { get; set; }
 
-   
+    public virtual ICollection<SysMenuApi> MenuApis { get; set; } = new List<SysMenuApi>();
+
 }

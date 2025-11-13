@@ -79,5 +79,6 @@ public partial class SysMenuPermission:TreeEntity<Guid>
     /// </summary>
     public string? ModifyBy { get; set; }
 
+    public virtual ICollection<SysMenuApi> MenuApis { get; set; } = new List<SysMenuApi>();
 
 }

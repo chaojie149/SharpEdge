@@ -83,5 +83,32 @@ public interface IMenuPermissionService
     /// 批量删除菜单节点
     /// </summary>
     Task<int> BatchDeleteAsync(IEnumerable<Guid> ids);
+    
+    
+    
+    /// <summary>
+    /// 为菜单分配API
+    /// </summary>
+    Task<bool> AssignApisToMenuAsync(MenuApiAssignParams assignParams);
+
+    /// <summary>
+    /// 移除菜单的API关联
+    /// </summary>
+    Task<bool> RemoveApisFromMenuAsync(Guid menuId, IEnumerable<Guid> apiIds);
+
+    /// <summary>
+    /// 获取菜单关联的所有API
+    /// </summary>
+    Task<List<SysMenuApiDto>> GetMenuApisAsync(Guid menuId);
+
+    /// <summary>
+    /// 获取菜单详情（包含关联的API）
+    /// </summary>
+    Task<MenuWithApisDto?> GetMenuWithApisAsync(Guid menuId);
+
+    /// <summary>
+    /// 批量获取多个菜单关联的API
+    /// </summary>
+    Task<Dictionary<Guid, List<SysMenuApiDto>>> GetMenusApisAsync(IEnumerable<Guid> menuIds);
 
 }
