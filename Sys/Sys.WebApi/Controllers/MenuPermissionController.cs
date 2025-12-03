@@ -12,7 +12,7 @@ namespace Sys.WebApi.Controllers;
 /// </summary>
 [Tags("System Management / Menu Permission Management")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class MenuPermissionController : ControllerBase
 {
     private readonly IMenuPermissionService _menuService;
@@ -61,16 +61,16 @@ public class MenuPermissionController : ControllerBase
     public async Task<IActionResult> Update([FromBody] SysMenuPermissionAddOrEditParams updateParams)
     {
         var success = await _menuService.UpdateAsync(updateParams);
-        return Ok(new { success });
+        return Ok(new { message = success ? "更新成功" : "更新失败！" });
     }
 
     [EndpointSummary("删除菜单节点（含后代）")]
     [EndpointDescription("根据ID删除菜单节点及其所有子节点。")]
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("delete/{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var success = await _menuService.DeleteAsync(id);
-        return Ok(new { success });
+        return Ok(new { message = success ? "删除成功" : "删除失败！" });
     }
 
     [EndpointSummary("批量删除菜单节点")]
@@ -105,7 +105,8 @@ public class MenuPermissionController : ControllerBase
     [EndpointSummary("获取完整树结构（嵌套）")]
     [EndpointDescription("返回完整的树形菜单结构，可选 rootId 和 maxDepth 参数。")]
     [HttpGet("tree")]
-    public async Task<IActionResult> GetTree([FromQuery] Guid? rootId = null, [FromQuery] int? maxDepth = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetTree([FromQuery] Guid? rootId = null, [FromQuery] int? maxDepth = null,
+        CancellationToken cancellationToken = default)
     {
         var result = await _menuService.GetTreeAsync(rootId, maxDepth, cancellationToken);
         return Ok(result);
@@ -114,7 +115,8 @@ public class MenuPermissionController : ControllerBase
     [EndpointSummary("获取树形结构（扁平列表）")]
     [EndpointDescription("返回带层级信息的菜单列表，可选 rootId 和 maxDepth 参数。")]
     [HttpGet("tree-flat")]
-    public async Task<IActionResult> GetTreeFlat([FromQuery] Guid? rootId = null, [FromQuery] int? maxDepth = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetTreeFlat([FromQuery] Guid? rootId = null, [FromQuery] int? maxDepth = null,
+        CancellationToken cancellationToken = default)
     {
         var result = await _menuService.GetTreeFlatAsync(rootId, maxDepth, cancellationToken);
         return Ok(result);
@@ -141,7 +143,8 @@ public class MenuPermissionController : ControllerBase
     [EndpointSummary("移动菜单节点")]
     [EndpointDescription("将指定菜单节点移动到新的父节点下。")]
     [HttpPost("{id:guid}/move")]
-    public async Task<IActionResult> MoveNode(Guid id, [FromBody] Guid? newParentId, CancellationToken cancellationToken)
+    public async Task<IActionResult> MoveNode(Guid id, [FromBody] Guid? newParentId,
+        CancellationToken cancellationToken)
     {
         await _menuService.MoveNodeAsync(id, newParentId, cancellationToken);
         return Ok(new { success = true, message = "节点移动成功" });

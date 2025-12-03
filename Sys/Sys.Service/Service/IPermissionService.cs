@@ -1,4 +1,5 @@
 ﻿using Core.Entity.Entities;
+using Sys.Entity.Base;
 using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Entity.Params;
@@ -64,12 +65,9 @@ public interface IPermissionService
     /// <summary>
     /// 获取用户的所有菜单权限树（合并去重）
     /// </summary>
-    Task<List<TreeNode<SysMenuPermission, Guid>>> GetUserMenuTreeAsync(Guid userId, int? maxDepth = null, CancellationToken cancellationToken = default);
+    Task<List<MenuTreeNode>> GetUserMenuTreeAsync(Guid userId, int? maxDepth = null, CancellationToken cancellationToken = default);
     
-    /// <summary>
-    /// 获取用户的所有API权限（合并去重）
-    /// </summary>
-    Task<List<SysApiDto>> GetUserApisAsync(Guid userId);
+
     
     /// <summary>
     /// 验证用户是否拥有指定权限

@@ -15,8 +15,5 @@ public class RolePermissionAssignParams
     /// </summary>
     public IEnumerable<Guid>? MenuPermissionIds { get; set; }
 
-    /// <summary>
-    /// API权限ID列表
-    /// </summary>
-    public IEnumerable<Guid>? ApiPermissionIds { get; set; }
+
 }

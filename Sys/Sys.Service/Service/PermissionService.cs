@@ -3,8 +3,10 @@ using Core.Entity.Entities;
 using Core.Persistent.Repository;
 using Core.Service.Base;
 using Core.Service.Exception;
+using Core.Service.GlobalConfig;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Sys.Entity.Base;
 using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Entity.Params;
@@ -50,8 +52,8 @@ public class PermissionService : BaseMgr, IPermissionService
         // 验证所有角色是否存在且启用
         var validRoles = await _unitOfWork.Repository<SysRole, Guid>()
             .Query()
+            
             .Where(r => roleIdList.Contains(r.Id) && r.Enable == true)
-            .Select(r => r.Id)
             .ToListAsync();
 
         if (validRoles.Count != roleIdList.Count)
@@ -59,25 +61,30 @@ public class PermissionService : BaseMgr, IPermissionService
 
         // 获取已存在的用户角色关系
         var existingRoles = await _unitOfWork.GetDbContext().Set<SysUserRole>()
+            .Include(ur => ur.Role)
             .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.RoleId!.Value)  // ✅ 转 Guid
             .ToListAsync();
 
-        // 找出需要新增的角色
-        var newRoles = roleIdList.Except(existingRoles).ToList();
-
-        if (newRoles.Count > 0)
+        if (existingRoles.Any(x=>x.Role.Code.Equals(AppGlobalSettings.FinalRole)))
         {
-            var userRoles = newRoles.Select(roleId => new SysUserRole
+            if (!validRoles.Any(x=>x.Code.Equals(AppGlobalSettings.FinalRole)))
+            {
+                throw new BusinessException("无法移除超级管理员角色");
+            }
+        }
+
+        if (validRoles.Count > 0)
+        {
+            var userRoles = validRoles.Select(roleId => new SysUserRole
             {
                 UserId = userId,
-                RoleId = roleId
+                RoleId = roleId.Id
             }).ToList();
-
+            _unitOfWork.GetDbContext().Set<SysUserRole>().RemoveRange(existingRoles);
             await _unitOfWork.GetDbContext().Set<SysUserRole>().AddRangeAsync(userRoles);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Information("为用户 {UserId} 分配了 {Count} 个角色", userId, newRoles.Count);
+            _logger.Information("为用户 {UserId} 分配了 {Count} 个角色", userId, validRoles.Count);
         }
 
         return true;
@@ -123,7 +130,7 @@ public class PermissionService : BaseMgr, IPermissionService
 
     public async Task<bool> AssignPermissionsToRoleAsync(RolePermissionAssignParams assignParams)
     {
-        if (assignParams.MenuPermissionIds == null && assignParams.ApiPermissionIds == null)
+        if (assignParams.MenuPermissionIds == null )
             throw new BusinessException("至少需要分配一种权限");
 
         // 验证角色是否存在
@@ -158,12 +165,12 @@ public class PermissionService : BaseMgr, IPermissionService
 
             // 找出需要新增的菜单权限
             var newMenuPermissions = validMenuIds
-                .Except(existingMenuPermissions.Select(Guid.Parse))
+                // .Except(existingMenuPermissions.Select(Guid.Parse))
                 .Select(menuId => new SysRolePermission
                 {
                     Id = Guid.NewGuid(),
                     RoleId = assignParams.RoleId,
-                    PermissionId = menuId.ToString(),
+                    PermissionId = menuId,
                     PermissionType = "menu",
                     CreatedTime = DateTime.UtcNow
                 });
@@ -171,39 +178,7 @@ public class PermissionService : BaseMgr, IPermissionService
             newPermissions.AddRange(newMenuPermissions);
         }
 
-        // 处理API权限
-        if (assignParams.ApiPermissionIds?.Any() == true)
-        {
-            // 验证API权限是否存在
-            var validApiIds = await _unitOfWork.Repository<SysApi, Guid>()
-                .Query()
-                .Where(a => assignParams.ApiPermissionIds.Contains(a.Id))
-                .Select(a => a.Id)
-                .ToListAsync();
-
-            if (validApiIds.Count != assignParams.ApiPermissionIds.Count())
-                throw new BusinessException("部分API权限不存在");
-
-            // 获取已存在的API权限
-            var existingApiPermissions = await dbContext.Set<SysRolePermission>()
-                .Where(rp => rp.RoleId == assignParams.RoleId && rp.PermissionType == "api")
-                .Select(rp => rp.PermissionId)
-                .ToListAsync();
-
-            // 找出需要新增的API权限
-            var newApiPermissions = validApiIds
-                .Except(existingApiPermissions.Select(Guid.Parse))
-                .Select(apiId => new SysRolePermission
-                {
-                    Id = Guid.NewGuid(),
-                    RoleId = assignParams.RoleId,
-                    PermissionId = apiId.ToString(),
-                    PermissionType = "api",
-                    CreatedTime = DateTime.UtcNow
-                });
-
-            newPermissions.AddRange(newApiPermissions);
-        }
+     
 
         if (newPermissions.Count > 0)
         {
@@ -218,7 +193,7 @@ public class PermissionService : BaseMgr, IPermissionService
 
     public async Task<bool> RemovePermissionsFromRoleAsync(Guid roleId, IEnumerable<Guid> permissionIds, string permissionType)
     {
-        var permissionIdList = permissionIds.Select(id => id.ToString()).ToList();
+        var permissionIdList = permissionIds.Select(id => id).ToList();
         if (permissionIdList.Count == 0)
             throw new BusinessException("权限列表不能为空");
 
@@ -243,12 +218,12 @@ public class PermissionService : BaseMgr, IPermissionService
 
         var menuPermissionIds = rolePermissions
             .Where(rp => rp.PermissionType == "menu")
-            .Select(rp => Guid.Parse(rp.PermissionId!))
+            .Select(rp => rp.PermissionId!)
             .ToList();
 
         var apiPermissionIds = rolePermissions
             .Where(rp => rp.PermissionType == "api")
-            .Select(rp => Guid.Parse(rp.PermissionId!))
+            .Select(rp => rp.PermissionId!)
             .ToList();
 
         // 获取菜单权限详情
@@ -259,19 +234,12 @@ public class PermissionService : BaseMgr, IPermissionService
                 .ToListAsync()
             : new List<SysMenuPermission>();
 
-        // 获取API权限详情
-        var apiPermissions = apiPermissionIds.Count > 0
-            ? await _unitOfWork.Repository<SysApi, Guid>()
-                .Query()
-                .Where(a => apiPermissionIds.Contains(a.Id))
-                .ToListAsync()
-            : new List<SysApi>();
+     
 
         return new RolePermissionsDto
         {
             RoleId = roleId,
             MenuPermissions = _mapper.Map<List<SysMenuPermissionDto>>(menuPermissions),
-            ApiPermissions = _mapper.Map<List<SysApiDto>>(apiPermissions)
         };
     }
 
@@ -281,7 +249,7 @@ public class PermissionService : BaseMgr, IPermissionService
             throw new BusinessException("权限类型必须是 'menu' 或 'api'");
 
         var roles = await _unitOfWork.GetDbContext().Set<SysRolePermission>()
-            .Where(rp => rp.PermissionId == permissionId.ToString() && rp.PermissionType == permissionType)
+            .Where(rp => rp.PermissionId == permissionId && rp.PermissionType == permissionType)
             .Include(rp => rp.Role)
             .Select(rp => rp.Role)
             .ToListAsync();
@@ -326,14 +294,14 @@ public class PermissionService : BaseMgr, IPermissionService
         // 提取并去重菜单权限ID
         var menuPermissionIds = rolePermissions
             .Where(rp => rp.PermissionType == "menu")
-            .Select(rp => Guid.Parse(rp.PermissionId!))
+            .Select(rp => rp.PermissionId!)
             .Distinct()
             .ToList();
 
         // 提取并去重API权限ID
         var apiPermissionIds = rolePermissions
             .Where(rp => rp.PermissionType == "api")
-            .Select(rp => Guid.Parse(rp.PermissionId!))
+            .Select(rp => rp.PermissionId!)
             .Distinct()
             .ToList();
 
@@ -347,24 +315,16 @@ public class PermissionService : BaseMgr, IPermissionService
                 .ToListAsync()
             : new List<SysMenuPermission>();
 
-        // 查询API权限详情
-        var apiPermissions = apiPermissionIds.Count > 0
-            ? await _unitOfWork.Repository<SysApi, Guid>()
-                .Query()
-                .Where(a => apiPermissionIds.Contains(a.Id))
-                .ToListAsync()
-            : new List<SysApi>();
-
+     
         return new UserPermissionsDto
         {
             UserId = userId,
             Roles = _mapper.Map<List<SysRoleDto>>(roles),
             MenuPermissions = _mapper.Map<List<SysMenuPermissionDto>>(menuPermissions),
-            ApiPermissions = _mapper.Map<List<SysApiDto>>(apiPermissions)
         };
     }
 
-    public async Task<List<TreeNode<SysMenuPermission, Guid>>> GetUserMenuTreeAsync(Guid userId, int? maxDepth = null, CancellationToken cancellationToken = default)
+    public async Task<List<MenuTreeNode>> GetUserMenuTreeAsync(Guid userId, int? maxDepth = null, CancellationToken cancellationToken = default)
     {
         // 获取用户的所有菜单权限ID（合并去重）
         var menuPermissionIds = await _unitOfWork.GetDbContext().Set<SysUserRole>()
@@ -379,13 +339,13 @@ public class PermissionService : BaseMgr, IPermissionService
                 _unitOfWork.GetDbContext().Set<SysRolePermission>().Where(rp => rp.PermissionType == "menu"),
                 roleId => roleId,
                 rp => rp.RoleId,
-                (roleId, rp) => Guid.Parse(rp.PermissionId!)
+                (roleId, rp) => rp.PermissionId
             )
             .Distinct()
             .ToListAsync(cancellationToken);
 
         if (menuPermissionIds.Count == 0)
-            return new List<TreeNode<SysMenuPermission, Guid>>();
+            return new List<MenuTreeNode>();
 
         // 获取所有相关的菜单节点（包括父节点，确保树完整）
         var allMenus = await _unitOfWork.Repository<SysMenuPermission, Guid>()
@@ -422,55 +382,38 @@ public class PermissionService : BaseMgr, IPermissionService
         return BuildMenuTree(allMenus, null, maxDepth, 0);
     }
 
-    private List<TreeNode<SysMenuPermission, Guid>> BuildMenuTree(
+    public Task<List<SysApiDto>> GetUserApisAsync(Guid userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    private List<MenuTreeNode> BuildMenuTree(
         List<SysMenuPermission> allMenus, 
         Guid? parentId, 
         int? maxDepth, 
         int currentDepth)
     {
         if (maxDepth.HasValue && currentDepth >= maxDepth.Value)
-            return new List<TreeNode<SysMenuPermission, Guid>>();
+            return new List<MenuTreeNode>();
 
         var children = allMenus
             .Where(m => m.ParentId == parentId)
             .OrderBy(m => m.Level)
-            .Select(m => new TreeNode<SysMenuPermission, Guid>
+            .ThenBy(m => m.Sort) // 建议加上 Sort 排序
+            .Select(m =>
             {
-                Data = m,
-                Children = BuildMenuTree(allMenus, m.Id, maxDepth, currentDepth + 1)
+                var node = _mapper.Map<MenuTreeNode>(m);
+                node.Children = BuildMenuTree(allMenus, m.Id, maxDepth, currentDepth + 1);
+                if (node.Children.Count == 0)
+                    node.Children = null; // 或者保持空数组，看前端需求
+                return node;
             })
             .ToList();
 
         return children;
     }
 
-    public async Task<List<SysApiDto>> GetUserApisAsync(Guid userId)
-    {
-        var apis = await _unitOfWork.GetDbContext().Set<SysUserRole>()
-            .Where(ur => ur.UserId == userId)
-            .Join(
-                _unitOfWork.GetDbContext().Set<SysRole>().Where(r => r.Enable == true),
-                ur => ur.RoleId,
-                r => r.Id,
-                (ur, r) => r.Id
-            )
-            .Join(
-                _unitOfWork.GetDbContext().Set<SysRolePermission>().Where(rp => rp.PermissionType == "api"),
-                roleId => roleId,
-                rp => rp.RoleId,
-                (roleId, rp) => Guid.Parse(rp.PermissionId!)
-            )
-            .Distinct()
-            .Join(
-                _unitOfWork.Repository<SysApi, Guid>().Query(),
-                permissionId => permissionId,
-                api => api.Id,
-                (permissionId, api) => api
-            )
-            .ToListAsync();
 
-        return _mapper.Map<List<SysApiDto>>(apis);
-    }
 
     public async Task<bool> CheckUserPermissionAsync(Guid userId, string permissionCode)
     {
@@ -502,15 +445,10 @@ public class PermissionService : BaseMgr, IPermissionService
             if (rp.PermissionType == "menu")
             {
                 hasPermission = await _unitOfWork.Repository<SysMenuPermission, Guid>()
-                    .Query()
-                    .AnyAsync(m => m.Id == Guid.Parse(rp.PermissionId!) && m.PermissionCode == permissionCode);
+                    .Query() 
+                    .AnyAsync(m => m.Id == rp.PermissionId! && m.PermissionCode == permissionCode);
             }
-            else if (rp.PermissionType == "api")
-            {
-                hasPermission = await _unitOfWork.Repository<SysApi, Guid>()
-                    .Query()
-                    .AnyAsync(a => a.Id == Guid.Parse(rp.PermissionId!) && a.PermissionCode == permissionCode);
-            }
+         
 
             if (hasPermission)
                 break;

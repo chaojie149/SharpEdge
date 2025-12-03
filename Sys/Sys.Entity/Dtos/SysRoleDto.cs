@@ -22,6 +22,6 @@ public class SysRoleDto
     /// <summary>
     /// 启用状态
     /// </summary>
-    public sbyte Enable { get; set; }
+    public bool Enable { get; set; }
 
 }

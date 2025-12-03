@@ -46,14 +46,7 @@ namespace Api.Controllers
              //     RequestHeader = "{}",
              //     Status = 1
              // });
-             await _unitOfWork.Repository<SysApi, Guid>().AddAsync(new SysApi()
-             {
-               Name = "ok",
-               Method = ".api",
-               Path = "/a",
-               Module = "Sys",
-               PermissionCode = "ok"
-             });
+       
              await _unitOfWork.SaveChangesAsync();
 
             return Ok();

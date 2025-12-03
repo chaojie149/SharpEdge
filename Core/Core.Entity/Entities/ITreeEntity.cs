@@ -3,26 +3,18 @@
 /// <summary>
 /// 树形结构接口
 /// </summary>
-public interface ITreeEntity<TKey> where TKey : struct
+public interface ITreeEntity<TKey, TSelf>
+    where TKey : struct
+    where TSelf : ITreeEntity<TKey, TSelf>
 {
-    /// <summary>
-    /// 父节点ID
-    /// </summary>
     TKey? ParentId { get; set; }
-    
-    /// <summary>
-    /// 层级路径（如：1/2/3）
-    /// </summary>
+
     string? Path { get; set; }
-    
-    /// <summary>
-    /// 层级深度
-    /// </summary>
+
     int Level { get; set; }
-    
-    /// <summary>
-    /// 排序
-    /// </summary>
+
     int Sort { get; set; }
+
+    ICollection<TSelf> Children { get; set; }
 }
 

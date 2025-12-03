@@ -25,7 +25,7 @@ public partial class SysRolePermission:BaseEntity<Guid>
     /// <summary>
     /// 权限ID（对应sys_menu_permission.id 或 sys_api.id）
     /// </summary>
-    public string PermissionId { get; set; } = null!;
+    public Guid PermissionId { get; set; } 
 
     /// <summary>
     /// 创建时间

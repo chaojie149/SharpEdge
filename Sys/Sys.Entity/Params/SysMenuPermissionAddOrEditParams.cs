@@ -6,39 +6,39 @@
     public class SysMenuPermissionAddOrEditParams
     {
         /// <summary>
-        /// 菜单ID（新增可为空）
+        /// Id
         /// </summary>
         public string? Id { get; set; }
 
         /// <summary>
-        /// 父节点ID
-        /// </summary>
-        public Guid? ParentId { get; set; }
-
-        /// <summary>
-        /// 菜单标题
+        /// 标题
         /// </summary>
         public string Title { get; set; } = null!;
 
         /// <summary>
-        /// 菜单类型
+        /// 面包屑导航
         /// </summary>
-        public string Type { get; set; } = null!;
+        public bool Breadcrumbs { get; set; }
 
         /// <summary>
-        /// 前端路由路径
+        /// 颜色
         /// </summary>
-        public string? RoutePath { get; set; }
+        public string? Color { get; set; }
 
         /// <summary>
-        /// 前端组件路径
+        /// 禁用
         /// </summary>
-        public string? ComponentPath { get; set; }
+        public bool Disabled { get; set; }
 
         /// <summary>
-        /// 权限标识
+        /// 外部
         /// </summary>
-        public string? PermissionCode { get; set; }
+        public bool External { get; set; }
+
+        /// <summary>
+        /// 下拉
+        /// </summary>
+        public bool IsDropdown { get; set; }
 
         /// <summary>
         /// 图标
@@ -46,13 +46,61 @@
         public string? Icon { get; set; }
 
         /// <summary>
-        /// 排序
+        /// 链接
         /// </summary>
-        public int Sort { get; set; }
+        public string? Link { get; set; }
 
         /// <summary>
-        /// 是否可见（1=显示,0=隐藏）
+        /// 搜索
         /// </summary>
-        public sbyte Visible { get; set; }
+        public string? Search { get; set; }
+
+        /// <summary>
+        /// 目标
+        /// </summary>
+        public bool Target { get; set; }
+
+        /// <summary>
+        /// 类型
+        /// </summary>
+        public string Type { get; set; } = null!;
+
+        /// <summary>
+        /// 链接
+        /// </summary>
+        public string? Url { get; set; }
+
+        /// <summary>
+        /// 说明
+        /// </summary>
+        public string? Caption { get; set; }
+
+        /// <summary>
+        /// 父级
+        /// </summary>
+        public Guid? ParentId { get; set; }
+
+        /// <summary>
+        /// 路径
+        /// </summary>
+        public string? Path { get; set; }
+
+        /// <summary>
+        /// 等级
+        /// </summary>
+        public string? Level { get; set; }
+
+        /// <summary>
+        /// 排序
+        /// </summary>
+        public string? Sort { get; set; }
+
+        /// <summary>
+        /// 模块
+        /// </summary>
+        public string? Module { get; set; }
+        
+        public string PermissionCode { get; set; } = null!;
+
     }
 }

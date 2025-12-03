@@ -1,6 +1,6 @@
 ﻿namespace Sys.Entity.Params;
 
-public abstract class SysUserAddOrEditParams
+public class SysUserAddOrEditParams
 {
     
     public string? Id { get; set; }
@@ -18,7 +18,7 @@ public abstract class SysUserAddOrEditParams
     /// <summary>
     /// 密码
     /// </summary>
-    public string Password { get; set; }
+    public string? Password { get; set; }
     
 
     /// <summary>

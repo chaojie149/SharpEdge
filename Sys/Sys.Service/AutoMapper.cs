@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Core.Entity.Entities;
+using Sys.Entity.Base;
 using Sys.Entity.Dtos;
 using Sys.Entity.Models;
 using Sys.Entity.Params;
@@ -35,6 +36,7 @@ public class AutoMapper : Profile
         
         // 实体到DTO
         CreateMap<SysMenuPermission, SysMenuPermissionDto>().ReverseMap();
+        CreateMap<SysMenuPermission, MenuTreeNode>();
 
         // ✅ 修复关键：TreeNode<SysMenuPermission, Guid> -> SysMenuPermissionDto
         // CreateMap<TreeNode<SysMenuPermission, Guid>, SysMenuPermissionDto>()

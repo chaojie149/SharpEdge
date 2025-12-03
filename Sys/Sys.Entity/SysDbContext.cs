@@ -13,7 +13,6 @@ public partial class SysDbContext : DbContext
     {
     }
 
-    public virtual DbSet<SysApi> SysApis { get; set; }
 
     public virtual DbSet<SysJwtBlack> SysJwtBlacks { get; set; }
 
@@ -35,47 +34,7 @@ public partial class SysDbContext : DbContext
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
 
-        modelBuilder.Entity<SysApi>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-            entity.ToTable("sys_api");
-
-            entity.Property(e => e.Id)
-                .HasMaxLength(64)
-                .HasColumnName("id");
-            entity.Property(e => e.CreatedBy)
-                .HasMaxLength(50)
-                .HasComment("创建人")
-                .HasColumnName("created_by");
-            entity.Property(e => e.CreatedTime)
-                .HasComment("创建时间")
-                .HasColumnType("datetime")
-                .HasColumnName("created_time");
-            entity.Property(e => e.Method)
-                .HasMaxLength(10)
-                .HasColumnName("method");
-            entity.Property(e => e.ModifyBy)
-                .HasMaxLength(50)
-                .HasComment("修改人")
-                .HasColumnName("modify_by");
-            entity.Property(e => e.ModifyTime)
-                .HasComment("修改时间")
-                .HasColumnType("datetime")
-                .HasColumnName("modify_time");
-            entity.Property(e => e.Module)
-                .HasMaxLength(64)
-                .HasColumnName("module");
-            entity.Property(e => e.Name)
-                .HasMaxLength(64)
-                .HasColumnName("name");
-            entity.Property(e => e.Path)
-                .HasMaxLength(255)
-                .HasColumnName("path");
-            entity.Property(e => e.PermissionCode)
-                .HasMaxLength(100)
-                .HasColumnName("permission_code");
-        });
 
         modelBuilder.Entity<SysJwtBlack>(entity =>
         {
@@ -140,129 +99,88 @@ public partial class SysDbContext : DbContext
         modelBuilder.Entity<SysMenuPermission>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("sys_menu_permission", tb => tb.HasComment("页面权限"));
-
-            entity.Property(e => e.Id)
+            entity.HasMany(e => e.Children)
+                .WithOne()
+                .HasForeignKey(e => e.ParentId)
+                .HasPrincipalKey(e => e.Id);
+            entity.ToTable("sys_menu_permission");
+        entity.Property(e => e.Id)
                 .HasMaxLength(64)
+                .HasComment("Id")
                 .HasColumnName("id");
-            entity.Property(e => e.ComponentPath)
-                .HasMaxLength(255)
-                .HasComment("组件路径")
-                .HasColumnName("component_path");
-            entity.Property(e => e.CreatedBy)
+            entity.Property(e => e.Breadcrumbs)
+                .HasComment("面包屑导航")
+                .HasColumnName("breadcrumbs");
+            entity.Property(e => e.Caption)
+                .HasMaxLength(200)
+                .HasComment("说明")
+                .HasColumnName("caption");
+            entity.Property(e => e.Color)
                 .HasMaxLength(50)
-                .HasComment("创建人")
-                .HasColumnName("created_by");
-            entity.Property(e => e.CreatedTime)
-                .HasComment("创建时间")
-                .HasColumnType("datetime")
-                .HasColumnName("created_time");
-            entity.Property(e => e.ExternalUrl)
-                .HasMaxLength(255)
-                .HasComment("外部链接")
-                .HasColumnName("external_url");
+                .HasComment("颜色")
+                .HasColumnName("color");
+            entity.Property(e => e.Disabled)
+                .HasComment("禁用")
+                .HasColumnName("disabled");
+            entity.Property(e => e.External)
+                .HasComment("外部")
+                .HasColumnName("external");
             entity.Property(e => e.Icon)
                 .HasMaxLength(100)
                 .HasComment("图标")
                 .HasColumnName("icon");
-            entity.Property(e => e.Iframe)
+            entity.Property(e => e.IsDropdown)
+                .HasComment("下拉")
+                .HasColumnName("is_dropdown");
+            entity.Property(e => e.Level)
+                .HasComment("等级")
+                .HasColumnName("level");
+            entity.Property(e => e.Link)
                 .HasMaxLength(255)
-                .HasComment("内嵌iframe地址")
-                .HasColumnName("iframe");
-            entity.Property(e => e.ModifyBy)
+                .HasComment("链接")
+                .HasColumnName("link");
+            entity.Property(e => e.Module)
                 .HasMaxLength(50)
-                .HasComment("修改人")
-                .HasColumnName("modify_by");
-            entity.Property(e => e.ModifyTime)
-                .HasComment("修改时间")
-                .HasColumnType("datetime")
-                .HasColumnName("modify_time");
+                .HasComment("模块")
+                .HasColumnName("module");
             entity.Property(e => e.ParentId)
+                .HasMaxLength(64)
                 .HasComment("父级")
                 .HasColumnName("parent_id");
+            entity.Property(e => e.Path)
+                .HasMaxLength(255)
+                .HasComment("路径")
+                .HasColumnName("path");
             entity.Property(e => e.PermissionCode)
                 .HasMaxLength(100)
-                .HasComment("权限标识")
+                .HasComment("权限代码")
                 .HasColumnName("permission_code");
-            entity.Property(e => e.RoutePath)
+            entity.Property(e => e.Search)
                 .HasMaxLength(255)
-                .HasComment("前端路由")
-                .HasColumnName("route_path");
-            // entity.Property(e => e.Seq)
-            //     .HasComment("排序")
-            //     .HasColumnName("seq");
-            entity.Property(e => e.Title)
-                .HasMaxLength(64)
-                .HasComment("菜单标题")
-                .HasColumnName("title");
-            entity.Property(e => e.Type)
-                .HasMaxLength(25)
-                .HasComment("菜单类型")
-                // .HasColumnType("enum('group','catalog','menu','button')")
-                .HasColumnName("type");
-            entity.Property(e => e.Visible)
-                .HasDefaultValueSql("'1'")
-                .HasComment("是否显示(1=显示,0=隐藏)")
-                .HasColumnName("visible");
-        });
-// 在 SysDbContext.OnModelCreating 方法中添加
-
-        modelBuilder.Entity<SysMenuApi>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("sys_menu_api", tb => tb.HasComment("菜单与API关联表"));
-
-            entity.HasIndex(e => e.MenuId, "idx_menu_id");
-            entity.HasIndex(e => e.ApiId, "idx_api_id");
-            entity.HasIndex(e => new { e.MenuId, e.ApiId }, "uk_menu_api").IsUnique();
-
-            entity.Property(e => e.Id)
-                .HasMaxLength(64)
-                .HasComment("主键")
-                .HasColumnName("id");
-
-            entity.Property(e => e.MenuId)
-                .HasMaxLength(64)
-                .HasComment("菜单权限ID")
-                .HasColumnName("menu_id");
-
-            entity.Property(e => e.ApiId)
-                .HasMaxLength(64)
-                .HasComment("API ID")
-                .HasColumnName("api_id");
-
-            entity.Property(e => e.Required)
-                .HasDefaultValue(true)
-                .HasComment("是否必需")
-                .HasColumnName("required");
-
+                .HasComment("搜索")
+                .HasColumnName("search");
             entity.Property(e => e.Sort)
                 .HasComment("排序")
                 .HasColumnName("sort");
-
-            entity.Property(e => e.CreatedTime)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasComment("创建时间")
-                .HasColumnType("datetime")
-                .HasColumnName("created_time");
-
-            entity.Property(e => e.Remark)
+            entity.Property(e => e.Target)
+                .HasComment("目标")
+                .HasColumnName("target");
+            entity.Property(e => e.Title)
+                .HasMaxLength(50)
+                .HasComment("标题")
+                .HasColumnName("title");
+            entity.Property(e => e.Type)
+                .HasMaxLength(64)
+                .HasComment("类型")
+                .HasColumnName("type");
+            entity.Property(e => e.Url)
                 .HasMaxLength(255)
-                .HasComment("备注")
-                .HasColumnName("remark");
-
-            entity.HasOne(d => d.Menu)
-                .WithMany(p => p.MenuApis)
-                .HasForeignKey(d => d.MenuId)
-                .HasConstraintName("fk_menuapi_menu");
-
-            entity.HasOne(d => d.Api)
-                .WithMany(p => p.MenuApis)
-                .HasForeignKey(d => d.ApiId)
-                .HasConstraintName("fk_menuapi_api");
+                .HasComment("链接")
+                .HasColumnName("url");
         });
+// 在 SysDbContext.OnModelCreating 方法中添加
+
+
         modelBuilder.Entity<SysRole>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");

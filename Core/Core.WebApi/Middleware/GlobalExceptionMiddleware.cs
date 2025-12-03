@@ -5,6 +5,7 @@ using Microsoft.Extensions.Localization;
 
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 
 namespace Core.WebApi.Middleware;
@@ -65,7 +66,11 @@ public class GlobalExceptionMiddleware
         response.Headers["Pragma"] = "no-cache";
         response.Headers["Expires"] = "0";
 
-        var result = ApiResponse<object>.Fail(message, [ex.Message], (int)statusCode);
-        await response.WriteAsync(JsonConvert.SerializeObject(result));
+        var result = ApiResponse<object>.Fail(message, ex.StackTrace?.ToString().Split("\n"), (int)statusCode);
+  
+        await response.WriteAsync(JsonConvert.SerializeObject(result, new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
+        }));
     }
 }

@@ -8,7 +8,7 @@ namespace Sys.WebApi.Controllers;
 
 [Tags("System Management / Role Management")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class RoleController : ControllerBase
 {
     private readonly IRoleService _roleService;
@@ -35,6 +35,15 @@ public class RoleController : ControllerBase
         var result = await _roleService.GetRoleAsync(id);
         return Ok(result);
     }
+    
+    [EndpointSummary("获取全部角色")]
+    [EndpointDescription("获取全部角色")]
+    [HttpGet("All")]
+    public async Task<IActionResult> GetAllRole(Guid id)
+    {
+        var result = await _roleService.GetAllRoleAsync();
+        return Ok(result);
+    }
 
     [EndpointSummary("添加角色")]
     [EndpointDescription("创建一个新的角色")]
@@ -42,7 +51,7 @@ public class RoleController : ControllerBase
     public async Task<IActionResult> AddRole([FromBody] SysRoleAddOrEditParams roleParams)
     {
         var result = await _roleService.AddRoleAsync(roleParams);
-        return Ok(result);
+        return Ok( new {Message = result ? "添加成功":"添加失败"});
     }
 
     [EndpointSummary("更新角色信息")]
@@ -51,16 +60,16 @@ public class RoleController : ControllerBase
     public async Task<IActionResult> UpdateRole([FromBody] SysRoleAddOrEditParams roleParams)
     {
         var result = await _roleService.UpdateRoleAsync(roleParams);
-        return Ok(result);
+        return Ok( new {Message = result ? "更新成功":"更新失败"});
     }
 
     [EndpointSummary("删除角色")]
     [EndpointDescription("根据角色ID删除对应角色")]
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("DeleteRole/{id:guid}")]
     public async Task<IActionResult> DeleteRole(Guid id)
     {
         var result = await _roleService.DeleteRoleAsync(id);
-        return Ok(new { success = result });
+        return Ok( new {Message = result ? "删除成功":"删除失败"});
     }
 
     [EndpointSummary("批量删除角色")]

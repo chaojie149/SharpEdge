@@ -24,9 +24,8 @@ public class RoleService(IUnitOfWork unitOfWork, IMapper mapper) : BaseMgr, IRol
     public async Task<PagedResult<SysRoleDto>> QueryAsync(PagedQueryRequest queryRequest)
     {
         var repo = _unitOfWork.Repository<SysRole, Guid>();
-        var query = repo.Query();
 
-        var roles =  await _unitOfWork.Repository<SysRole, Guid>()
+        var roles = await _unitOfWork.Repository<SysRole, Guid>()
             .QueryAsync<SysRoleDto>(_mapper.ConfigurationProvider, queryRequest);
         return roles;
     }
@@ -35,6 +34,14 @@ public class RoleService(IUnitOfWork unitOfWork, IMapper mapper) : BaseMgr, IRol
     {
         var role = await _unitOfWork.Repository<SysRole, Guid>().GetByIdAsync(roleId);
         return _mapper.Map<SysRoleDto>(role);
+    }
+
+    public async Task<List<SysRoleDto>> GetAllRoleAsync()
+    {
+
+        var roles = await _unitOfWork.Repository<SysRole, Guid>()
+            .GetAllAsync();
+       return _mapper.Map<List<SysRoleDto>>(roles);
     }
 
     public async Task<bool> AddRoleAsync(SysRoleAddOrEditParams roleParams)
@@ -80,13 +87,32 @@ public class RoleService(IUnitOfWork unitOfWork, IMapper mapper) : BaseMgr, IRol
     public async Task<bool> DeleteRoleAsync(Guid roleId)
     {
         var repo = _unitOfWork.Repository<SysRole, Guid>();
+
         var role = await repo.GetByIdAsync(roleId);
+
+        if (role != null && role.Code.Equals(AppGlobalSettings.FinalRole))
+        {
+            throw new BusinessException("超级管理员不允许删除");
+        }
 
         if (role == null)
             return false;
 
-        repo.Delete(role);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            var db = _unitOfWork.GetDbContext();
+
+            // 1. 删除关联表中的所有记录
+            var userRoles = db.Set<SysUserRole>().Where(ur => ur.RoleId == roleId);
+            
+            db.Set<SysUserRole>().RemoveRange(userRoles);
+
+            repo.Delete(role);
+            
+            await _unitOfWork.SaveChangesAsync();
+        });
+        
+     
         _logger.Information("角色 {RoleId} 已删除", roleId);
         return true;
     }

@@ -186,7 +186,31 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     {
         _dbSet.Update(entity);
     }
-
+// 在实现类中添加
+    public virtual void UpdateIgnoreNull(TEntity entity)
+    {
+        _dbSet.Attach(entity);
+        var entry = _context.Entry(entity);
+        entry.State = EntityState.Modified;
+    
+        // 遍历所有属性，只标记非null的属性为已修改
+        foreach (var property in entry.Properties)
+        {
+            var currentValue = property.CurrentValue;
+        
+            // 跳过主键、外键和null值 - 不标记为已修改
+            if (property.Metadata.IsPrimaryKey() || 
+                property.Metadata.IsForeignKey() || 
+                currentValue == null)
+            {
+                property.IsModified = false;
+            }
+            else
+            {
+                property.IsModified = true;
+            }
+        }
+    }
     public virtual void UpdateRange(IEnumerable<TEntity> entities)
     {
         _dbSet.UpdateRange(entities);

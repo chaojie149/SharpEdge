@@ -1,0 +1,14 @@
+﻿{
+   "ConnectionStringName": "dab-connection-string",
+   "Dacpac": null,
+   "DatabaseType": 6,
+   "MergeDacpacs": false,
+   "Optional": false,
+   "ProjectPath": "D:\\Project\\SharpEdge\\Test\\TestProject1",
+   "Tables": [
+      {
+         "Name": "sys_permission_mantis",
+         "ObjectType": 0
+      }
+   ]
+}

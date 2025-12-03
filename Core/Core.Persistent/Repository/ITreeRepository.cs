@@ -5,8 +5,9 @@ namespace Core.Persistent.Repository;
 /// <summary>
 /// 树形结构仓储接口
 /// </summary>
-public interface ITreeRepository<TEntity, TKey> : IRepository<TEntity, TKey> 
-    where TEntity : BaseEntity<TKey>, ITreeEntity<TKey> where TKey : struct 
+public interface ITreeRepository<TEntity, TKey> : IRepository<TEntity, TKey>
+    where TEntity : TreeEntity<TKey, TEntity>
+    where TKey : struct
 {
     /// <summary>
     /// 获取所有根节点
@@ -31,7 +32,7 @@ public interface ITreeRepository<TEntity, TKey> : IRepository<TEntity, TKey>
     /// <summary>
     /// 获取树形结构（返回嵌套的树）
     /// </summary>
-    Task<List<TreeNode<TEntity, TKey>>> GetTreeAsync(
+    Task<List<TEntity>> GetTreeAsync(
         TKey? rootId = default, 
         int? maxDepth = null,
         CancellationToken cancellationToken = default);

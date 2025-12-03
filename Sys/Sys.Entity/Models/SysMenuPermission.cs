@@ -9,45 +9,38 @@ namespace Sys.Entity.Models;
 /// <summary>
 /// 页面权限
 /// </summary>
-public partial class SysMenuPermission:TreeEntity<Guid>
+public partial class SysMenuPermission:TreeEntity<Guid, SysMenuPermission>
 {
 
     /// <summary>
-    /// 菜单标题
+    /// 标题
     /// </summary>
     public string Title { get; set; } = null!;
 
     /// <summary>
-    /// 菜单类型
+    /// 面包屑导航
     /// </summary>
-    public string Type { get; set; } = null!;
+    public bool Breadcrumbs { get; set; }
 
     /// <summary>
-    /// 前端路由
+    /// 颜色
     /// </summary>
-    public string? RoutePath { get; set; }
+    public string? Color { get; set; }
 
     /// <summary>
-    /// 组件路径
+    /// 禁用
     /// </summary>
-    public string? ComponentPath { get; set; }
+    public bool Disabled { get; set; }
 
     /// <summary>
-    /// 权限标识
+    /// 外部
     /// </summary>
-    public string? PermissionCode { get; set; }
+    public bool External { get; set; }
 
     /// <summary>
-    /// 内嵌iframe地址
+    /// 下拉
     /// </summary>
-    public string? Iframe { get; set; }
-
-
-
-    /// <summary>
-    /// 是否显示(1=显示,0=隐藏)
-    /// </summary>
-    public sbyte Visible { get; set; }
+    public bool IsDropdown { get; set; }
 
     /// <summary>
     /// 图标
@@ -55,30 +48,44 @@ public partial class SysMenuPermission:TreeEntity<Guid>
     public string? Icon { get; set; }
 
     /// <summary>
-    /// 外部链接
+    /// 链接
     /// </summary>
-    public string? ExternalUrl { get; set; }
+    public string? Link { get; set; }
 
     /// <summary>
-    /// 创建时间
+    /// 搜索
     /// </summary>
-    public DateTime CreatedTime { get; set; }
+    public string? Search { get; set; }
 
     /// <summary>
-    /// 创建人
+    /// 目标
     /// </summary>
-    public string? CreatedBy { get; set; }
+    public bool Target { get; set; }
 
     /// <summary>
-    /// 修改时间
+    /// 类型
     /// </summary>
-    public DateTime? ModifyTime { get; set; }
+    public string Type { get; set; } = null!;
 
     /// <summary>
-    /// 修改人
+    /// 链接
     /// </summary>
-    public string? ModifyBy { get; set; }
+    public string? Url { get; set; }
 
-    public virtual ICollection<SysMenuApi> MenuApis { get; set; } = new List<SysMenuApi>();
+    /// <summary>
+    /// 说明
+    /// </summary>
+    public string? Caption { get; set; }
+
+    /// <summary>
+    /// 权限代码
+    /// </summary>
+    public string PermissionCode { get; set; } = null!;
+
+    /// <summary>
+    /// 模块
+    /// </summary>
+    public string? Module { get; set; }
+
 
 }

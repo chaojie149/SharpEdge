@@ -28,6 +28,14 @@ public interface IUserService
     /// <param name="userName"></param>
     /// <returns></returns>
      public Task<SysUserDto> GetUserByNameAsync(string userName);
+    
+    
+     /// <summary>
+     /// 根据用户名查询
+     /// </summary>
+     /// <param name="userName"></param>
+     /// <returns></returns>
+     public Task<SysUserDto> GetUserDetail();
      
     /// <summary>
     /// 添加用户
@@ -58,5 +66,7 @@ public interface IUserService
     /// <returns></returns>
      public Task<int> BatchDeleteUsersAsync(IEnumerable<Guid> userIds);
      
+    
+    public Task<bool> ResetUserPasswordAsync(Guid userId, string password);
      
 }

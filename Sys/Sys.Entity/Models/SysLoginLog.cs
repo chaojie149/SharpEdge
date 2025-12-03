@@ -31,7 +31,7 @@ public partial class SysLoginLog:BaseEntity<Guid>
     /// <summary>
     /// 登录成功
     /// </summary>
-    public sbyte? Status { get; set; }
+    public bool Status { get; set; }
 
     /// <summary>
     /// 登录设备

@@ -155,10 +155,10 @@ public class LoginService : BaseMgr, ILoginService
                 Username = loginRequestParams.Username,
                 LogDate = DateTime.Now,
                 RequestHeader = SerializeRequestHeaders(),
-                Status = 1,
+                Status = true,
             };
             await _unitOfWork.Repository<SysLoginLog, Guid>().AddAsync(loginLog);
-        
+         
             await _unitOfWork.SaveChangesAsync();
         });
         
@@ -172,7 +172,7 @@ public class LoginService : BaseMgr, ILoginService
             RefreshToken = refreshToken,
             UserInfo = new UserInfo
             {
-              
+                Id = userDto.Id,
                 Username = userDto.Username,
                 RealName = userDto.Name,
                 Roles = userDto.Roles,
@@ -264,7 +264,7 @@ public class LoginService : BaseMgr, ILoginService
             RefreshToken = newRefreshToken,
             UserInfo = new UserInfo
             {
-              
+                Id = userDto.Id,
                 Username = userDto.Username,
                 RealName = userDto.Name,
                 Roles = userDto.Roles,

@@ -12,9 +12,10 @@ namespace Core.Persistent.Repository;
 /// <summary>
 /// 树形结构仓储实现
 /// </summary>
-public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRepository<TEntity, TKey>
-    where TEntity : BaseEntity<TKey>, ITreeEntity<TKey>
-    where TKey : struct // ✅ 关键约束，确保可用 Nullable<TKey>
+public class TreeRepository<TEntity, TKey>
+    : Repository<TEntity, TKey>, ITreeRepository<TEntity, TKey>
+    where TKey : struct
+    where TEntity : TreeEntity<TKey, TEntity>
 {
     public TreeRepository(DbContext context) : base(context) { }
 
@@ -84,8 +85,8 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
     /// <summary>
     /// 获取树形结构（嵌套树）
     /// </summary>
-    public virtual async Task<List<TreeNode<TEntity, TKey>>> GetTreeAsync(
-        TKey? rootId = default,
+    public virtual async Task<List<TEntity>> GetTreeAsync(
+        TKey? rootId = null,
         int? maxDepth = null,
         CancellationToken cancellationToken = default)
     {
@@ -99,13 +100,13 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
         {
             var root = await GetByIdAsync(rootId.Value, cancellationToken);
             if (root == null)
-                return new List<TreeNode<TEntity, TKey>>();
+                return new List<TEntity>();
 
             entities = new List<TEntity> { root };
             entities.AddRange(await GetDescendantsAsync(rootId.Value, cancellationToken));
         }
 
-        return BuildTree(entities, rootId, maxDepth, 0);
+        return BuildTree(entities, null, maxDepth, 0);
     }
 
     /// <summary>
@@ -209,32 +210,33 @@ public class TreeRepository<TEntity, TKey> : Repository<TEntity, TKey>, ITreeRep
             .AnyAsync(e => e.ParentId.HasValue && e.ParentId.Value.Equals(parentId), cancellationToken);
     }
 
-    /// <summary>
-    /// 构建树形结构（递归）
-    /// </summary>
-    private List<TreeNode<TEntity, TKey>> BuildTree(
+    private List<TEntity> BuildTree(
         List<TEntity> allEntities,
         TKey? parentId,
         int? maxDepth,
         int currentDepth)
     {
         if (maxDepth.HasValue && currentDepth >= maxDepth.Value)
-            return new List<TreeNode<TEntity, TKey>>();
+            return new List<TEntity>();
 
         var children = allEntities
-            .Where(e => (!parentId.HasValue || parentId.Value.Equals(default(TKey)))
-                ? (!e.ParentId.HasValue || e.ParentId.Value.Equals(default(TKey)))
-                : (e.ParentId.HasValue && e.ParentId.Value.Equals(parentId.Value)))
+            .Where(e => Equals(e.ParentId, parentId))
             .OrderBy(e => e.Sort)
-            .Select(e => new TreeNode<TEntity, TKey>
-            {
-                Data = e,
-                Children = BuildTree(allEntities, e.Id, maxDepth, currentDepth + 1)
-            })
             .ToList();
+
+        foreach (var child in children)
+        {
+            child.Children = BuildTree(allEntities, child.Id, maxDepth, currentDepth + 1);
+
+         
+
+            if (child.Children.Count == 0)
+                child.Children = null;
+        }
 
         return children;
     }
+
 
     /// <summary>
     /// 尝试将字符串转换为 TKey

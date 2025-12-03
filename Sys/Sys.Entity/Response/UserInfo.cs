@@ -7,7 +7,7 @@ namespace Sys.Entity.Response
     public  class UserInfo
     {
       
-
+        public required string Id { get; set; }
         public required string Username { get; set; }
         
         public required string RealName { get; set; }

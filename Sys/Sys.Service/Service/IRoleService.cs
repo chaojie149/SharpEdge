@@ -12,6 +12,7 @@ public interface IRoleService
     Task<PagedResult<SysRoleDto>> QueryAsync(PagedQueryRequest queryRequest);
 
     Task<SysRoleDto> GetRoleAsync(Guid roleId);
+    Task<List<SysRoleDto>> GetAllRoleAsync();
 
     Task<bool> AddRoleAsync(SysRoleAddOrEditParams roleParams);
 

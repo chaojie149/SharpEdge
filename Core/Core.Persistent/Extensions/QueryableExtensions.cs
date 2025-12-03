@@ -12,8 +12,7 @@ namespace Core.Persistent.Extensions;
 
 public static class QueryableExtensions
 {
-    
-  /// <summary>
+    /// <summary>
     /// 应用动态过滤
     /// </summary>
     public static IQueryable<T> ApplyFilters<T>(this IQueryable<T> query, List<FilterRequest>? filters)
@@ -26,7 +25,7 @@ public static class QueryableExtensions
         foreach (var filter in filters)
         {
             var predicate = BuildPredicate<T>(filter);
-            
+
             if (predicate == null)
                 continue;
 
@@ -110,27 +109,38 @@ public static class QueryableExtensions
             switch (filter.Operator)
             {
                 case FilterOperator.Equal:
-                    body = Expression.Equal(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    var propertyType = Nullable.GetUnderlyingType(property.Type) ?? property.Type;
+
+                    var typedValue = Convert.ChangeType(filter.Value, propertyType);
+
+                    var constant = Expression.Constant(typedValue, property.Type);
+
+                    body = Expression.Equal(property, constant);
                     break;
 
                 case FilterOperator.NotEqual:
-                    body = Expression.NotEqual(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    body = Expression.NotEqual(property,
+                        Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
                     break;
 
                 case FilterOperator.GreaterThan:
-                    body = Expression.GreaterThan(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    body = Expression.GreaterThan(property,
+                        Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
                     break;
 
                 case FilterOperator.GreaterThanOrEqual:
-                    body = Expression.GreaterThanOrEqual(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    body = Expression.GreaterThanOrEqual(property,
+                        Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
                     break;
 
                 case FilterOperator.LessThan:
-                    body = Expression.LessThan(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    body = Expression.LessThan(property,
+                        Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
                     break;
 
                 case FilterOperator.LessThanOrEqual:
-                    body = Expression.LessThanOrEqual(property, Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
+                    body = Expression.LessThanOrEqual(property,
+                        Expression.Constant(Convert.ChangeType(filter.Value, property.Type)));
                     break;
 
                 case FilterOperator.Contains:
@@ -155,8 +165,11 @@ public static class QueryableExtensions
                         var containsMethodForList = typeof(Enumerable).GetMethods()
                             .First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
                             .MakeGenericMethod(property.Type);
-                        body = Expression.Call(containsMethodForList, Expression.Constant(values.Select(v => Convert.ChangeType(v, property.Type)).ToList()), property);
+                        body = Expression.Call(containsMethodForList,
+                            Expression.Constant(values.Select(v => Convert.ChangeType(v, property.Type)).ToList()),
+                            property);
                     }
+
                     break;
 
                 case FilterOperator.NotIn:
@@ -166,9 +179,12 @@ public static class QueryableExtensions
                         var containsMethodForList = typeof(Enumerable).GetMethods()
                             .First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
                             .MakeGenericMethod(property.Type);
-                        var inExpression = Expression.Call(containsMethodForList, Expression.Constant(values.Select(v => Convert.ChangeType(v, property.Type)).ToList()), property);
+                        var inExpression = Expression.Call(containsMethodForList,
+                            Expression.Constant(values.Select(v => Convert.ChangeType(v, property.Type)).ToList()),
+                            property);
                         body = Expression.Not(inExpression);
                     }
+
                     break;
 
                 case FilterOperator.IsNull:
@@ -182,9 +198,10 @@ public static class QueryableExtensions
 
             return body != null ? Expression.Lambda<Func<T, bool>>(body, parameter) : null;
         }
-        catch
+        catch (Exception e)
         {
-            return null;
+            throw new Exception($"Error: {e.Message} {e.StackTrace}", e);
+            // return null;
         }
     }
 
@@ -201,7 +218,8 @@ public static class QueryableExtensions
 
         foreach (var prop in properties)
         {
-            var propertyInfo = property!.Type.GetProperty(prop, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            var propertyInfo = property!.Type.GetProperty(prop,
+                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (propertyInfo == null)
                 return null;
 
@@ -243,6 +261,7 @@ public static class QueryableExtensions
             return _parameter;
         }
     }
+
     // 条件查询
     public static IQueryable<T> WhereIf<T>(
         this IQueryable<T> query,

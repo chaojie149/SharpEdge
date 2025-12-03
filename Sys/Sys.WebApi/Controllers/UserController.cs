@@ -15,7 +15,7 @@ namespace Sys.WebApi.Controllers;
 ///
 [Tags("System Management / User Management")]
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("[controller]/[action]")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -56,10 +56,22 @@ public class UserController : ControllerBase
 
         return Ok(user);
     }
+    
+    
+    /// <summary>
+    /// 根据用户名查询用户
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<SysUserDto>> UserDetail()
+    {
+        var user = await _userService.GetUserDetail();
+        return Ok(user);
+    }
 
     /// <summary>
     /// 新增用户
     /// </summary>
+    /// 
     [HttpPost]
     public async Task<ActionResult> Add([FromBody] SysUserAddOrEditParams userParams)
     {
@@ -94,7 +106,7 @@ public class UserController : ControllerBase
     /// <summary>
     /// 删除单个用户
     /// </summary>
-    [HttpDelete("{id:guid}")]
+        [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {
         var success = await _userService.DeleteUserAsync(id);
@@ -112,5 +124,12 @@ public class UserController : ControllerBase
     {
         var count = await _userService.BatchDeleteUsersAsync(userIds);
         return Ok(new { message = $"已删除 {count} 条记录" });
+    }
+  
+    [HttpPost]
+    public async Task<ActionResult> ResetPassword(ResetPasswordParams resetPasswordParams)
+    {
+        var count = await _userService.ResetUserPasswordAsync(resetPasswordParams.Id, resetPasswordParams.Password);
+        return Ok(new { message = $"密码已重置" });
     }
 }
